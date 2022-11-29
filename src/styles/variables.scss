@@ -1,0 +1,5 @@
+@import '~vuetify/src/styles/styles.sass';
+$body-font-family: Arial,  "Microsoft JhengHei","DFKai-SB", sans-serif;
+
+$data-table-regular-header-font-size: map-deep-get($headings, 'body-2', 'size') !important;
+$data-table-regular-row-font-size: map-deep-get($headings, 'body-1', 'size') !important;

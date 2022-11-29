@@ -1,0 +1,21 @@
+{
+  "home": {
+    "text": "3D地圖平台",
+    "subtitle": "template",
+    "href": "/index"
+  },
+  "items": [
+    {
+      "text": "地圖顯示",
+      "icon": "mdi-map",
+      "icon-alt": "mdi-map",
+      "href": "/map/MarkerMap"
+    },
+    {
+      "text": "Cesium原始地圖",
+      "icon": "mdi-clipboard-text-search-outline",
+      "icon-alt": "mdi-clipboard-text-search-outline",
+      "href": "/prep/CesiumMap"
+    }
+  ]
+}
