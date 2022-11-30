@@ -6,6 +6,20 @@ import floodedArea from '../assets/floodedArea'
 export default {
   data: () => ({
     token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNTFkYWFlNi03NmJkLTQ4NTYtYTdmZC01ZWFiMmYyN2UwNzYiLCJpZCI6MTE0NzQ5LCJpYXQiOjE2NjgzOTQ2OTh9.CpaV1PVZonfT71zS8iIkv5lzU8mEmDspL4GVEKj8qy8',
+    cesiumBaseSources: {
+      standardRoadMap: new Cesium.UrlTemplateImageryProvider({
+        url : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+        credit : 'standardRoadMap',
+      }),
+      hybrid: new Cesium.UrlTemplateImageryProvider({
+        url : 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        credit : 'hybrid',
+      }),
+      satelliteOnly: new Cesium.UrlTemplateImageryProvider({
+        url : 'https://mt1.google.com/vt/lyrs=s&hl=pl&&x={x}&y={y}&z={z}',
+        credit : 'satelliteOnly',
+      })
+    } 
   }),
   methods: {
     initCesium(targetId) {
@@ -26,7 +40,6 @@ export default {
       // 地上物定位
       scene.globe.depthTestAgainstTerrain = true;
       
-      
       // 視角移動
       this.cameraFlyTo(scene)
 
@@ -37,10 +50,30 @@ export default {
       }
       return data
     },
+    changeCesiumSource(ol3d, newSourceName){
+      ol3d.getCesiumScene().imageryLayers._layers = ol3d.getCesiumScene().imageryLayers._layers.map(el=> {
+        if(el._imageryProvider._credit === undefined) {
+          el.name = null
+          return el
+        } else {
+          el.name = el._imageryProvider._credit._html
+          return el
+        }
+      })
+      if(ol3d.getCesiumScene().imageryLayers._layers.length === 2) {
+        ol3d.getCesiumScene().imageryLayers.addImageryProvider(this.cesiumBaseSources[newSourceName])
+        ol3d.getCesiumScene().imageryLayers._layers[2].name = newSourceName
+      }
+      ol3d.getCesiumScene().imageryLayers._layers.forEach(el=> el.show = false )
+      let has = ol3d.getCesiumScene().imageryLayers._layers.map(el=> el.name).indexOf(newSourceName)
+
+      if(has !== -1) {
+        ol3d.getCesiumScene().imageryLayers._layers[has].show = true
+      } else {
+        ol3d.getCesiumScene().imageryLayers.addImageryProvider(this.cesiumBaseSources[newSourceName])
+      }
+    },
     toggle3Dmap(ol3d, state){
-      // let tempBaseSource = this.getBaseSourceByBaseSourceId(this.mapRadio)
-      console.log(ol3d.map_)
-      console.log(this.layers)
       ol3d.setEnabled(state)
     },
     addBuilding(scene){
@@ -48,7 +81,7 @@ export default {
         style: new Cesium.Cesium3DTileStyle({
           color: {
             conditions: [
-              [true, "rgb(121,85,72)"]
+              [true, "rgba(255,255,255,0.98)"]
             ]
           }
         })
@@ -165,24 +198,24 @@ export default {
         }
       });
     },
-    initOriginCesium () {
-      const viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: Cesium.createWorldTerrain({
-          requestVertexNormals : true
-        }),
-        selectionIndicator: false,
-        shadows: true,
-        shouldAnimate: true,
-      });
-      viewer.scene.primitives.add(Cesium.createOsmBuildings())
+    // initOriginCesium () {
+    //   const viewer = new Cesium.Viewer('cesiumContainer', {
+    //       terrainProvider: Cesium.createWorldTerrain({
+    //         requestVertexNormals : true
+    //       }),
+    //       selectionIndicator: false,
+    //       shadows: true,
+    //       shouldAnimate: true,
+    //     });
+    //     viewer.scene.primitives.add(Cesium.createOsmBuildings())
 
-      viewer.camera.flyTo({
-        destination : Cesium.Cartesian3.fromDegrees(121.556, 25.035, 800),
-        orientation : {
-        heading : Cesium.Math.toRadians(0),
-        pitch : Cesium.Math.toRadians(-45),
-      }
-    });
-    }
+    //     viewer.camera.flyTo({
+    //       destination : Cesium.Cartesian3.fromDegrees(121.556, 25.035, 800),
+    //       orientation : {
+    //       heading : Cesium.Math.toRadians(0),
+    //       pitch : Cesium.Math.toRadians(-45),
+    //     }
+    //   });
+    // }
   }
 }

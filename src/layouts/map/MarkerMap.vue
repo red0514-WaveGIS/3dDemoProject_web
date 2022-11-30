@@ -182,22 +182,23 @@ export default {
     isShowMapTools: true,
     positionStyle: '',
     mapRadio: 'hybrid',
-    viewSwitch: false
+    viewSwitch: false,
   }),
   mounted: async function() {
     if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
     this.ol3dData = this.initCesium(this.map.mapTargetId)
+    this.setFullScreenControl(this.map.mapTargetId)
   },
   methods: {
     viewSwitchFunc(state){
-      this.toggle3Dmap(this.ol3dData.ol3d ,state)
+      this.toggle3Dmap(this.ol3dData.ol3d, state)
     },
     collapseFunc(){
       this.isShowMapTools = !this.isShowMapTools
       if(this.isShowMapTools) {
         this.positionStyle = ""
       } else {
-        this.positionStyle = 'transform: translateX(84%);'
+        this.positionStyle = 'transform: translateX(84%); height: 50%; top:22%;'
       }
     },
     showFloodedAreaFunc(state){
@@ -358,6 +359,7 @@ export default {
   watch: {
     mapRadio(){
       this.setBaseSourceByBaseSourceId(this.map.mapTargetId,this.mapRadio)
+      this.changeCesiumSource(this.ol3dData.ol3d, this.mapRadio)
     }
   }
 }
