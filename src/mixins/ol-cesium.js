@@ -81,7 +81,7 @@ export default {
         style: new Cesium.Cesium3DTileStyle({
           color: {
             conditions: [
-              [true, "rgba(255,255,255,0.98)"]
+              [true, "rgb(255,255,255)"]
             ]
           }
         })

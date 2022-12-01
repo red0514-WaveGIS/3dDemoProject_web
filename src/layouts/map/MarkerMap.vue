@@ -230,7 +230,7 @@ export default {
     wrapInitMap: function() {
       this.initMap(this.map.mapTargetId, this.EPSG4326ToEPSG3857([this.map.lon, this.map.lat]))
       this.setOverlayMap("MarkerMap", "pop", "popup")
-      this.setInfoPopup()
+      // this.setInfoPopup()
     },
     seletedMapSource: function(selected) {
       this.mapSource = selected
@@ -302,56 +302,58 @@ export default {
       }
     },
     setInfoPopup: function() {
-      let currentThis = this
+      // let currentThis = this
       this.setFeatureClickEvent(this.map.mapTargetId, "pop", {
         hasFeature: function(elementId, feature) {
+          console.log(elementId)
+          console.log(feature)
           // 用 styleRemark 判斷
-          let pupupStyleRemark = feature.getProperties().styleRemark
-          let popInfoName
-          switch (pupupStyleRemark) {
-            case 'waterVolume':
-              popInfoName = feature.getProperties().featureRemark.st_no
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-            case 'waterSpeed':
-              popInfoName = feature.getProperties().featureRemark.uid
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-            case 'soilSand':
-              popInfoName = feature.getProperties().featureRemark.uid
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-            case 'cctvPoint':
-              popInfoName = feature.getProperties().featureRemark.cctv_no
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-            case 'floodForecast':
-              popInfoName = feature.getProperties().uid
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-            case 'riverBed':
-              popInfoName = feature.getProperties().featureRemark.st_no
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-            case 'trackingParticle':
-              popInfoName = feature.getProperties().featureRemark.st_no
-              if(currentThis.popInfo[popInfoName]) {
-                currentThis.popupCol = currentThis.popInfo[popInfoName]
-              }
-              break;
-          }
+          // let pupupStyleRemark = feature.getProperties().styleRemark
+          // let popInfoName
+          // switch (pupupStyleRemark) {
+          //   case 'waterVolume':
+          //     popInfoName = feature.getProperties().featureRemark.st_no
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          //   case 'waterSpeed':
+          //     popInfoName = feature.getProperties().featureRemark.uid
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          //   case 'soilSand':
+          //     popInfoName = feature.getProperties().featureRemark.uid
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          //   case 'cctvPoint':
+          //     popInfoName = feature.getProperties().featureRemark.cctv_no
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          //   case 'floodForecast':
+          //     popInfoName = feature.getProperties().uid
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          //   case 'riverBed':
+          //     popInfoName = feature.getProperties().featureRemark.st_no
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          //   case 'trackingParticle':
+          //     popInfoName = feature.getProperties().featureRemark.st_no
+          //     if(currentThis.popInfo[popInfoName]) {
+          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
+          //     }
+          //     break;
+          // }
         },
       })
     },
