@@ -31,23 +31,14 @@
         //       type:'line',
         //       state: false
         //     },
-        //     {
-        //       id: 10,
-        //       name: '路段2',
-        //       layerName: 'closeRoad',
-        //       type:'line', 
-        //       state: false
-        //     },
         //   ],
         // },
         // {
         //   id: 15,
-        //   name: '警戒區域',
-        //   children: [
-        //     { id: 16, name: '警戒區域', layerName: 'warningArea', type:'polygon', state: false },
-        //     { id: 17, name: '警戒區域', layerName: 'warningArea', type:'polygon', state: false },
-        //     { id: 18, name: '警戒區域', layerName: 'warningArea', type:'polygon', state: false },
-        //   ],
+        //   name: '各縣市界線圖',
+        //   layerName: 'cityArea', 
+        //   type:'polygon', 
+        //   state: false
         // },
       ],
     }),

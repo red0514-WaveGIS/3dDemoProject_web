@@ -71,27 +71,36 @@
             <div>
               <h3>Cesium 效果功能</h3>
               <div class="mt-2">
-                <v-switch
-                  color="green"
-                  v-model="switch2"
-                  :hide-details="true"
-                  :label="`${switch2 === false ? '顯示':'隱藏'}3D建築`"
-                  @change="addBuildingFunc(switch2)"
-                ></v-switch>
-                <v-switch
-                  color="blue"
-                  v-model="switch3"
-                  :hide-details="true"
-                  :label="'顯示淹水區域'"
-                  @change="showFloodedAreaFunc(switch3)"
-                ></v-switch>
-                <!-- <v-switch
-                  color="blue"
-                  v-model="switch4"
-                  :hide-details="true"
-                  :label="`${switch4 === false ? '顯示':'隱藏'}地形`"
-                  @change="addTerrainFunc(switch4)"
-                ></v-switch> -->
+                <div>
+                  <v-switch
+                    color="green"
+                    v-model="switch2"
+                    :hide-details="true"
+                    :label="`${switch2 === false ? '顯示':'隱藏'}3D建築`"
+                    @change="addBuildingFunc(switch2)"
+                  ></v-switch>
+                </div>
+                <div>
+                  <v-switch
+                    color="blue"
+                    v-model="switch3"
+                    :hide-details="true"
+                    :label="'大巨蛋淹水區域'"
+                    @change="showFloodedAreaFunc(switch3)"
+                  ></v-switch>
+                  <!-- <v-btn color="red" x-small dark fab >
+                    <v-icon color="white">mdi-airplane-takeoff</v-icon>
+                  </v-btn> -->
+                </div>
+                <div>
+                  <v-switch
+                    color="blue"
+                    v-model="switch4"
+                    :hide-details="true"
+                    :label="'中正紀念堂淹水區域'"
+                    @change="showStaticFloodedAreaFunc(switch4)"
+                  ></v-switch>
+                </div>
                 <v-btn
                   class="mt-4"
                   color="teal" 
@@ -108,12 +117,12 @@
   </div>
 </template>
 <script>
-
 import PopupInfo from "@/components/map/PopupInfo.vue"
 import customApi from "@/mixins/custom-api.js"
 import wgOl from "@/mixins/wg-ol.js"
 import cesiumPlugin from "@/mixins/ol-cesium.js"
 import wgProj4 from "@/mixins/wg-proj4.js"
+import custumMap from "@/mixins/custum-map.js"
 import Treeview from '@/components/vuetify-tools/Treeview.vue'
 
 export default {
@@ -121,7 +130,7 @@ export default {
   components: {
     PopupInfo, Treeview
   },
-  mixins: [customApi, wgOl, wgProj4, cesiumPlugin],
+  mixins: [customApi, wgOl, wgProj4, cesiumPlugin, custumMap],
   data: () => ({
     map: {
       mapTargetId: "MarkerMap",
@@ -147,26 +156,17 @@ export default {
       scene: "",
     },
     switch1: false,
-    switch2: false,
+    switch2: true,
     switch3: false,
     switch4: false,
-    pointList: {
-      layerName: 'water',
-      items: [
-        { st_name: '水位計1', layerName: 'water', icon: 'waterVolume' , point: [121.55168468094935,25.067828675529395]},
-        { st_name: '水位計2', layerName: 'water', icon: 'waterVolume' , point: [121.55902125074843,25.044457577838035]},
-        { st_name: '水位計3', layerName: 'water', icon: 'waterVolume' , point: [121.55601373602603,25.049388808910535]},
-        { st_name: '水位計4', layerName: 'water', icon: 'waterVolume' , point: [121.55601373602603,25.04257419772236]},
-        { st_name: '水位計5', layerName: 'water', icon: 'waterVolume' , point: [121.54892467459747,25.03771799453045]},
-        { st_name: '水位計6', layerName: 'water', icon: 'waterVolume' , point: [121.57200189489834,25.09359247819668]},
-      ]
-    },
     buildings: null,
     terrain: null,
     floodedList: {
       big_egg: {
         areaName: '大巨蛋',
         height: 15,
+        heightest: 40,
+        lowest: 15,
         areaPoint: [
           121.5579520324756,25.04493581866319,
           121.55781944944574,25.0415166137583, 
@@ -176,18 +176,36 @@ export default {
           121.56238948850107, 25.04493585452839, 
           121.55891028902674, 25.04500261794834, 
         ],
-        cesiumItem: null
+        cesiumItem: null,
+        active: true,
+      },
+      memorial_hall: {
+        areaName: '中正紀念堂',
+        height: 15,
+        heightest: 40,
+        lowest: 15,
+        areaPoint: [
+          121.51775259572933, 25.038465374569633, 
+          121.51669942171664, 25.034813667319295, 
+          121.52251213212672, 25.03226291284592, 
+          121.52405138645013, 25.035639439775327,
+        ],
+        cesiumItem: null,
+        active: true,
       }
     },
     isShowMapTools: true,
     positionStyle: '',
     mapRadio: 'hybrid',
-    viewSwitch: false,
+    viewSwitch: true,
   }),
   mounted: async function() {
     if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
     this.ol3dData = this.initCesium(this.map.mapTargetId)
     this.setFullScreenControl(this.map.mapTargetId)
+    // 開啟3D地圖
+    this.viewSwitchFunc(true)
+    this.addBuildingFunc(true)
   },
   methods: {
     viewSwitchFunc(state){
@@ -212,6 +230,19 @@ export default {
       } else {
         this.floodedList['big_egg'].cesiumItem.show = state
       }
+    },
+    showStaticFloodedAreaFunc(state){
+      let item = this.floodedList['memorial_hall']
+      if(state) {
+        if(this.floodedList['memorial_hall'].cesiumItem === null) {
+          this.floodedList['memorial_hall'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
+        } else {
+          this.floodedList['memorial_hall'].cesiumItem.show = state
+        }
+      } else {
+        this.floodedList['memorial_hall'].cesiumItem.show = state
+      }
+
     },
     cameraFlyToFunc(){
       this.cameraFlyTo(this.ol3dData.scene)
@@ -254,44 +285,10 @@ export default {
         if(this.getLayerByLayerName(this.map.mapTargetId,layerName) === undefined) {
           switch (type) {
             case 'point':
-              if(layerName.indexOf('water') > -1) {
-                for (let el of this.pointList.items) {
-                  let centerPointer = this.EPSG4326ToEPSG3857(el.point)
-                  this.setPointFeature(this.map.mapTargetId, centerPointer, el.icon, el.layerName, el)
-                }
-              }
+              this.custumPointFunc(this.map.mapTargetId, layerName)
               break;
             case 'polygon':
-              if(layerName.indexOf('floodForecast') > -1) {
-                // this.$store.commit("setDataLoading", {status: true})
-                // this.getFloodForecast_list(obj.level)
-                // .then(res=>{
-                //   let resData = res.data
-                //   let tempS = this.initVectorSource()
-                //   for(let el of resData) {
-                //     let features = this.getFeaturesByKml(el.kml)
-                //     features.forEach(feature=>{
-                //       let roadcontrol = [ 
-                //         { name:'名稱', value: '內容'},
-                //         { name: "等級", value: feature.getProperties().name},
-                //         { name: "圖層", value: layerName},
-                //       ]
-                //       this.popInfo[feature.getProperties().name + el.uid] = roadcontrol
-                //       feature.set('styleRemark', 'floodForecast')
-                //       feature.set('uid', feature.getProperties().name + el.uid)
-                //       tempS.addFeature(feature)
-                //     })
-                //   }
-                //   this.initVectorLayer(this.map.mapTargetId,layerName,tempS)
-                // })
-                // .catch(err=>{
-                //   console.log(err)
-                // })
-                // .finally(()=>{
-                //   this.$store.commit("setDataLoading", { status: false })
-                //   this.floodLegendIsShow = true
-                // })
-              }
+              this.customPolygonFunc(this.map.mapTargetId, layerName)
               break;
           }
         } else {

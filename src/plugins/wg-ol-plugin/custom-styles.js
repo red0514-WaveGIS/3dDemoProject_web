@@ -45,4 +45,19 @@ export default {
     })
     return style
   },
+  // 縣市界圖層 與 養護工程處轄區
+  cityCountryArea: function(feature) {
+    let featureRemark = feature.getProperties()
+    let style
+    style = new Style({
+      stroke: new Stroke({
+        color: "rgb(0,0,0,0.2)",
+        width: 1,
+      }),
+      fill: new Fill({
+        color: featureRemark.randomColor
+      }),
+    })
+    return style
+  },
 }

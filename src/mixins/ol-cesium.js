@@ -132,26 +132,36 @@ export default {
     addedFloodedPolygon(ol3d, item) {
       // 淹水區域座標
       let floodedAreaPoint = item.areaPoint
+
+      // 加入動態高度
+      let height = 0
+      let isActive = item.active
+      if(isActive) {
+        height = new Cesium.CallbackProperty(function () {
+          if(isPluse) {
+            if(item.height > item.heightest) {
+              isPluse = false
+            }
+            item.height += 0.1
+          } else {
+            if(item.height < item.lowest) {
+              isPluse = true
+            }
+            item.height -= 0.1
+          }
+          return item.height
+        }, false)
+      } else {
+        height = item.height
+      }
       // 加入形狀
       let isPluse = true
+      
       let entity = {
           name: item.areaName,
           polygon : {
             hierarchy: Cesium.Cartesian3.fromDegreesArray(floodedAreaPoint),
-            extrudedHeight: new Cesium.CallbackProperty(function () {
-              if(isPluse) {
-                if(item.height > 40) {
-                  isPluse = false
-                }
-                item.height += 0.1
-              } else {
-                if(item.height < 15) {
-                  isPluse = true
-                }
-                item.height -= 0.1
-              }
-              return item.height
-            }, false), 
+            extrudedHeight: height, 
             material: Cesium.Color.DEEPSKYBLUE.withAlpha(0.7),
             closeTop: true,  // 頂部是否密合
             closeBottom: true,  // 底部是否密合
