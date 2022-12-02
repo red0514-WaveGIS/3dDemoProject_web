@@ -38,11 +38,11 @@ export default {
       items: NavConfig.items,
       home: NavConfig.home,
       showHome: false,
-      color: 'brown darken-4',
+      color: 'blue-grey darken-3',
       dark: true
     },
     topBar: {
-      color: 'brown darken-3',
+      color: 'blue-grey darken-3',
       elevation: 0,
       dense: false,
       title: NavConfig.home.text,

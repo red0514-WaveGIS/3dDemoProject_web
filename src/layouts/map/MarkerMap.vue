@@ -28,7 +28,7 @@
             Map Tools
           </v-alert>
           <div class="mx-4">
-            <div>
+            <div class="map-style">
               <h3>地圖類型選擇</h3>
               <v-switch
                 color="green"
@@ -60,7 +60,7 @@
               </v-radio-group>
             </div>
             <v-divider class="my-2"></v-divider>
-            <div>
+            <div class="openlayers-style">
               <h3>Openlayers 點位功能</h3>
               <Treeview
                 @openLayerName="openLayerName"
@@ -68,43 +68,67 @@
               /> 
             </div>
             <v-divider class="my-2"></v-divider>
-            <div>
+            <div class="cesium-style">
               <h3>Cesium 效果功能</h3>
               <div class="mt-2">
-                <div>
+                <div class="mt-2">
                   <v-switch
+                    class="mt-0"
                     color="green"
-                    v-model="switch2"
+                    v-model="buildingState"
                     :hide-details="true"
-                    :label="`${switch2 === false ? '顯示':'隱藏'}3D建築`"
-                    @change="addBuildingFunc(switch2)"
+                    :label="`${buildingState === false ? '顯示':'隱藏'}3D建築`"
+                    @change="addBuildingFunc(buildingState)"
                   ></v-switch>
                 </div>
-                <div>
+                <div class="mt-2 d-flex align-center">
                   <v-switch
+                    class="mt-0"
                     color="blue"
                     v-model="switch3"
                     :hide-details="true"
                     :label="'大巨蛋淹水區域'"
                     @change="showFloodedAreaFunc(switch3)"
                   ></v-switch>
-                  <!-- <v-btn color="red" x-small dark fab >
-                    <v-icon color="white">mdi-airplane-takeoff</v-icon>
-                  </v-btn> -->
+                  <v-btn class="ml-4" color="red" x-small dark fab >
+                    <v-icon color="white" @click="cameraFlyToFunc(floodedList['big_egg'].cameraPosition)">mdi-airplane-takeoff</v-icon>
+                  </v-btn>
                 </div>
-                <div>
+                <div class="mt-2 d-flex">
                   <v-switch
+                    class="mt-0"
                     color="blue"
                     v-model="switch4"
                     :hide-details="true"
                     :label="'中正紀念堂淹水區域'"
                     @change="showStaticFloodedAreaFunc(switch4)"
                   ></v-switch>
+                  <v-btn class="ml-4" color="red" x-small dark fab >
+                    <v-icon color="white" @click="cameraFlyToFunc(floodedList['memorial_hall'].cameraPosition)">mdi-airplane-takeoff</v-icon>
+                  </v-btn>
                 </div>
+                <v-divider></v-divider>
+                <h3 class="mt-2">Weather Simulation</h3>
+                <v-radio-group v-model="weatherGroup" class="mt-2">
+                  <v-radio
+                    v-for="weather in weatherLists"
+                    color="orange"
+                    :key="weather"
+                    :label="`${weather}`"
+                    :value="weather"
+                  >
+                    <template v-slot:label>
+                      <div>
+                        <v-icon>{{turnBackIconFunc(weather)}}</v-icon> 
+                        <span class="pl-2">{{weather}}</span>
+                      </div>
+                    </template>
+                  </v-radio>
+                </v-radio-group>
                 <v-btn
                   class="mt-4"
                   color="teal" 
-                  @click="cameraFlyToFunc()"
+                  @click="cameraFlyToFunc(originalPosition)"
                 >
                   <span class="white--text">返回初始視角</span> 
                 </v-btn>
@@ -124,6 +148,8 @@ import cesiumPlugin from "@/mixins/ol-cesium.js"
 import wgProj4 from "@/mixins/wg-proj4.js"
 import custumMap from "@/mixins/custum-map.js"
 import Treeview from '@/components/vuetify-tools/Treeview.vue'
+import weather from '@/assets/cesium-object/weather.js'
+import floodedList from '@/assets/cesium-object/floodedList.js'
 
 export default {
   name: "MarkerMap",
@@ -132,6 +158,11 @@ export default {
   },
   mixins: [customApi, wgOl, wgProj4, cesiumPlugin, custumMap],
   data: () => ({
+    originalPosition: {
+      lon: 121.556,
+      lat: 25.035,
+      height: 800
+    },
     map: {
       mapTargetId: "MarkerMap",
       lon: 121.556,
@@ -156,7 +187,7 @@ export default {
       scene: "",
     },
     switch1: false,
-    switch2: true,
+    buildingState: false,
     switch3: false,
     switch4: false,
     buildings: null,
@@ -178,6 +209,11 @@ export default {
         ],
         cesiumItem: null,
         active: true,
+        cameraPosition: {
+          lon: 121.55931651430299,
+          lat: 25.031606648776876,
+          height: 800
+        }
       },
       memorial_hall: {
         areaName: '中正紀念堂',
@@ -192,12 +228,19 @@ export default {
         ],
         cesiumItem: null,
         active: true,
+        cameraPosition: {
+          lon: 121.52093034329343,
+          lat: 25.02601413412601,
+          height: 800
+        }
       }
     },
     isShowMapTools: true,
     positionStyle: '',
     mapRadio: 'hybrid',
     viewSwitch: true,
+    weatherGroup: 'Cloudy',
+    weatherLists: ['Cloudy', 'Rain', 'Fog', 'Snow']
   }),
   mounted: async function() {
     if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
@@ -205,7 +248,7 @@ export default {
     this.setFullScreenControl(this.map.mapTargetId)
     // 開啟3D地圖
     this.viewSwitchFunc(true)
-    this.addBuildingFunc(true)
+    // this.addBuildingFunc(true)
   },
   methods: {
     viewSwitchFunc(state){
@@ -220,32 +263,32 @@ export default {
       }
     },
     showFloodedAreaFunc(state){
-      let item = this.floodedList['big_egg']
+      let item = floodedList['big_egg']
       if(state) {
-        if(this.floodedList['big_egg'].cesiumItem === null) {
-          this.floodedList['big_egg'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
+        if(floodedList['big_egg'].cesiumItem === null) {
+          floodedList['big_egg'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
         } else {
-          this.floodedList['big_egg'].cesiumItem.show = state
+          floodedList['big_egg'].cesiumItem.show = state
         }
       } else {
-        this.floodedList['big_egg'].cesiumItem.show = state
+        floodedList['big_egg'].cesiumItem.show = state
       }
     },
     showStaticFloodedAreaFunc(state){
-      let item = this.floodedList['memorial_hall']
+      let item = floodedList['memorial_hall']
       if(state) {
-        if(this.floodedList['memorial_hall'].cesiumItem === null) {
-          this.floodedList['memorial_hall'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
+        if(floodedList['memorial_hall'].cesiumItem === null) {
+          floodedList['memorial_hall'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
         } else {
-          this.floodedList['memorial_hall'].cesiumItem.show = state
+          floodedList['memorial_hall'].cesiumItem.show = state
         }
       } else {
-        this.floodedList['memorial_hall'].cesiumItem.show = state
+        floodedList['memorial_hall'].cesiumItem.show = state
       }
 
     },
-    cameraFlyToFunc(){
-      this.cameraFlyTo(this.ol3dData.scene)
+    cameraFlyToFunc(postion){
+      this.cameraFlyTo(this.ol3dData.scene, postion)
     },
     addBuildingFunc(state){
       if(state === true) {
@@ -354,11 +397,35 @@ export default {
         },
       })
     },
+    turnBackIconFunc(weather){
+      let icon = ""
+      switch (weather) {
+        case 'Cloudy':
+          icon = 'mdi-weather-cloudy'
+          break;
+        case 'Rain':
+          icon = 'mdi-weather-rainy'
+          break;
+        case 'Snow':
+          icon = 'mdi-weather-snowy'
+          break;
+        case 'Fog':
+          icon = 'mdi-weather-fog'
+          break;
+      }
+      return icon
+    }
   },
   watch: {
     mapRadio(){
       this.setBaseSourceByBaseSourceId(this.map.mapTargetId,this.mapRadio)
       this.changeCesiumSource(this.ol3dData.ol3d, this.mapRadio)
+    },
+    weatherGroup(){
+      this.removeWeather(this.ol3dData)
+      if(this.weatherGroup !== 'Cloudy') {
+        this.addWeather(this.ol3dData, weather[this.weatherGroup], this.weatherGroup)
+      }
     }
   }
 }

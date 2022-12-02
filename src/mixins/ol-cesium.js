@@ -19,7 +19,12 @@ export default {
         url : 'https://mt1.google.com/vt/lyrs=s&hl=pl&&x={x}&y={y}&z={z}',
         credit : 'satelliteOnly',
       })
-    } 
+    },
+    originalPosition: {
+      lon: 121.556,
+      lat: 25.035,
+      height: 800
+    }, 
   }),
   methods: {
     initCesium(targetId) {
@@ -30,7 +35,7 @@ export default {
         map: ol2Map,
         time() {
           return Cesium.JulianDate.now();
-        }
+        },
       }); // ol2dMap is the ol.Map instance
       const scene = ol3d.getCesiumScene()
 
@@ -41,7 +46,7 @@ export default {
       scene.globe.depthTestAgainstTerrain = true;
       
       // 視角移動
-      this.cameraFlyTo(scene)
+      this.cameraFlyTo(scene, this.originalPosition)
 
       // 回存ol-cesium資料
       let data = {
@@ -156,7 +161,7 @@ export default {
       }
       // 加入形狀
       let isPluse = true
-      
+
       let entity = {
           name: item.areaName,
           polygon : {
@@ -199,9 +204,18 @@ export default {
       console.log(entity)
       ol3d.getDataSourceDisplay().defaultDataSource.entities.add(entity)
     },
-    cameraFlyTo(scene){
+    addWeather(ol3d, weather, name){
+      ol3d.scene.postProcessStages.add(new Cesium.PostProcessStage({
+        name: name,
+        fragmentShader: weather,
+      }))
+    },
+    removeWeather(ol3d){
+      ol3d.scene.postProcessStages.removeAll();
+    },
+    cameraFlyTo(scene, position){
       scene.camera.flyTo({
-          destination : Cesium.Cartesian3.fromDegrees(121.556, 25.035, 800),
+          destination : Cesium.Cartesian3.fromDegrees(position.lon, position.lat, position.height),
           orientation : {
           heading : Cesium.Math.toRadians(10),
           pitch : Cesium.Math.toRadians(-45),
