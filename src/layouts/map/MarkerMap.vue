@@ -88,7 +88,7 @@
                     v-model="switch3"
                     :hide-details="true"
                     :label="'大巨蛋淹水區域'"
-                    @change="showFloodedAreaFunc(switch3)"
+                    @change="showFloodedAreaFunc(switch3, 'big_egg')"
                   ></v-switch>
                   <v-btn class="ml-4" color="red" x-small dark fab >
                     <v-icon color="white" @click="cameraFlyToFunc(floodedList['big_egg'].cameraPosition)">mdi-airplane-takeoff</v-icon>
@@ -101,7 +101,7 @@
                     v-model="switch4"
                     :hide-details="true"
                     :label="'中正紀念堂淹水區域'"
-                    @change="showStaticFloodedAreaFunc(switch4)"
+                    @change="showFloodedAreaFunc(switch4, 'memorial_hall')"
                   ></v-switch>
                   <v-btn class="ml-4" color="red" x-small dark fab >
                     <v-icon color="white" @click="cameraFlyToFunc(floodedList['memorial_hall'].cameraPosition)">mdi-airplane-takeoff</v-icon>
@@ -262,31 +262,39 @@ export default {
         this.positionStyle = 'transform: translateX(84%); height: 50%; top:22%;'
       }
     },
-    showFloodedAreaFunc(state){
-      let item = floodedList['big_egg']
+    showFloodedAreaFunc(state, name){
+      let item = floodedList[name]
       if(state) {
-        if(floodedList['big_egg'].cesiumItem === null) {
-          floodedList['big_egg'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
+        if(floodedList[name].cesiumItem === null) {
+          floodedList[name].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
         } else {
-          floodedList['big_egg'].cesiumItem.show = state
+          for(let entity of floodedList[name].cesiumItem._entities._array) {
+            if(entity._name === item.areaName) {
+              entity._show = state
+            }
+          }
         }
       } else {
-        floodedList['big_egg'].cesiumItem.show = state
+        for(let entity of floodedList[name].cesiumItem._entities._array) {
+          if(entity._name === item.areaName) {
+            entity._show = state
+          }
+        }
       }
     },
-    showStaticFloodedAreaFunc(state){
-      let item = floodedList['memorial_hall']
-      if(state) {
-        if(floodedList['memorial_hall'].cesiumItem === null) {
-          floodedList['memorial_hall'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
-        } else {
-          floodedList['memorial_hall'].cesiumItem.show = state
-        }
-      } else {
-        floodedList['memorial_hall'].cesiumItem.show = state
-      }
+    // showStaticFloodedAreaFunc(state){
+    //   let item = floodedList['memorial_hall']
+    //   if(state) {
+    //     if(floodedList['memorial_hall'].cesiumItem === null) {
+    //       floodedList['memorial_hall'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
+    //     } else {
+    //       floodedList['memorial_hall'].cesiumItem.show = state
+    //     }
+    //   } else {
+    //     floodedList['memorial_hall'].cesiumItem.show = state
+    //   }
 
-    },
+    // },
     cameraFlyToFunc(postion){
       this.cameraFlyTo(this.ol3dData.scene, postion)
     },
