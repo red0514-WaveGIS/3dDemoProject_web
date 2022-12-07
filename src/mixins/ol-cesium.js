@@ -81,16 +81,57 @@ export default {
       ol3d.setEnabled(state)
     },
     addBuilding(scene){
-      const sceneBuilding = scene.primitives.add(Cesium.createOsmBuildings({
+      const osmBuildingsTileset = Cesium.createOsmBuildings({
         style: new Cesium.Cesium3DTileStyle({
-          color: {
-            conditions: [
-              [true, "rgb(255,255,255)"]
+          color : {
+            conditions : [
+              ["${feature['addr:city']} === '臺北市'", "color('#13293D')"],
+              ['true', 'color("white", 1.0)']
             ]
-          }
-        })
-      }))
+          },
+          show: null,
+          // show: this.setShowBuildingConditionString(
+          //   25.04538076919183,
+          //   25.04153912699482,
+          //   121.55796412314149,
+          //   121.56583135058975
+          // )
+        }),
+      })
+      const sceneBuilding = scene.primitives.add(osmBuildingsTileset)
       return sceneBuilding
+    },
+    adjustShowBuildingArea(sceneBuilding){
+      if(sceneBuilding.isSetBuilding !== null) {
+        sceneBuilding.isSetBuilding.style = new Cesium.Cesium3DTileStyle({
+          color : {
+            conditions : [
+              ['true', 'color("red", 1.0)']
+            ]
+          },
+          show: this.setShowBuildingConditionString(
+            sceneBuilding.point[0],
+            sceneBuilding.point[1],
+            sceneBuilding.point[2],
+            sceneBuilding.point[3],
+          )
+        })
+      }
+    },
+    resetShowBuildingArea(sceneBuilding){
+      if(sceneBuilding.isSetBuilding !== null) {
+        sceneBuilding.isSetBuilding.style = new Cesium.Cesium3DTileStyle({
+          color : {
+            conditions : [
+              ['true', 'color("white", 1.0)']
+            ]
+          },
+        })
+      }
+    },
+    setShowBuildingConditionString(up, bottom, left, right){
+      let conditions = `\${feature['cesium#longitude']} > ${left} && \${feature['cesium#longitude']} < ${right} && \${feature['cesium#latitude']} < ${up} && \${feature['cesium#latitude']} > ${bottom}`
+      return conditions
     },
     hideBuilding(building, state){
       building.show = state
@@ -189,24 +230,34 @@ export default {
         }
       });
     },
-    // initOriginCesium () {
-    //   const viewer = new Cesium.Viewer('cesiumContainer', {
-    //       terrainProvider: Cesium.createWorldTerrain({
-    //         requestVertexNormals : true
-    //       }),
-    //       selectionIndicator: false,
-    //       shadows: true,
-    //       shouldAnimate: true,
-    //     });
-    //     viewer.scene.primitives.add(Cesium.createOsmBuildings())
+    setGetLonLatCallback() {
 
-    //     viewer.camera.flyTo({
-    //       destination : Cesium.Cartesian3.fromDegrees(121.556, 25.035, 800),
-    //       orientation : {
-    //       heading : Cesium.Math.toRadians(0),
-    //       pitch : Cesium.Math.toRadians(-45),
-    //     }
-    //   });
-    // }
+    },
+    // ORIGINAL CESIUM FUNCTION
+    initOriginCesium () {
+      window['Cesium'] = Cesium
+      Cesium.Ion.defaultAccessToken = this.token;
+      const viewer = new Cesium.Viewer('cesiumContainer', { terrainProvider: Cesium.createWorldTerrain()});
+      viewer.scene.primitives.add(Cesium.createOsmBuildings({
+        style: new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              // ["${feature['building']} === 'hospital'", "color('#0000FF')"],
+              // ["${feature['building']} === 'school'", "color('#00FF00')"],
+              ["${feature['sport']} === true", "color(red)"],
+              [true, "color('#ffffff')"]
+            ]
+          }
+        })
+      }))
+
+      viewer.scene.camera.flyTo({
+        destination : Cesium.Cartesian3.fromDegrees(121.52093034329343, 25.02601413412601, 800),
+        orientation : {
+        heading : Cesium.Math.toRadians(10),
+        pitch : Cesium.Math.toRadians(-45),
+      }
+      })
+    }
   }
 }

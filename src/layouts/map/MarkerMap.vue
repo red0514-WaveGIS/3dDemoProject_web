@@ -29,7 +29,7 @@
           </v-alert>
           <div class="mx-4">
             <div class="map-style">
-              <h3>地圖類型選擇</h3>
+              <h3 class="yellow lighten-5">地圖類型選擇</h3>
               <v-switch
                 color="green"
                 v-model="viewSwitch"
@@ -61,7 +61,7 @@
             </div>
             <v-divider class="my-2"></v-divider>
             <div class="openlayers-style">
-              <h3>Openlayers 點位功能</h3>
+              <h3 class="yellow lighten-5">Openlayers 點位查詢</h3>
               <Treeview
                 @openLayerName="openLayerName"
                 @closeLayerName="closeLayerName"
@@ -69,9 +69,10 @@
             </div>
             <v-divider class="my-2"></v-divider>
             <div class="cesium-style">
-              <h3>Cesium 效果功能</h3>
+              <h3 class="yellow lighten-5">Cesium 效果</h3>
               <div class="mt-2">
-                <div class="mt-2">
+                <h4 class="mt-2">Building Control</h4>
+                <div class="my-2 ">
                   <v-switch
                     class="mt-0"
                     color="green"
@@ -81,6 +82,54 @@
                     @change="addBuildingFunc(buildingState)"
                   ></v-switch>
                 </div>
+                <v-expansion-panels class="mb-4">
+                  <v-expansion-panel>
+                    <v-expansion-panel-header><span class="pink--text">*設定建築顯示範圍</span></v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                     <div class="d-flex">
+                        <v-text-field 
+                          class="mx-2"
+                          hide-details
+                          label="Up_lat"
+                          v-model="upLat"
+                        ></v-text-field>
+                        <v-text-field 
+                          class="mx-2"
+                          hide-details
+                          label="Bottom_lat"
+                          v-model="bottomLat"
+                        ></v-text-field>
+                      </div>
+                      <div class="d-flex">
+                        <v-text-field 
+                          class="mx-2"
+                          hide-details
+                          label="Left_lon"
+                          v-model="leftLon"
+                        ></v-text-field>
+                        <v-text-field 
+                          class="mx-2"
+                          hide-details
+                          label="Right_lon"
+                          v-model="rightLon"
+                        ></v-text-field>
+                      </div>
+                      <div class="d-flex justify-end">
+                        <v-btn class="mt-4" dark color="cyan" @click="addSampleLoactionForShowBuildingFunc()">
+                          <v-icon dark class="pr-1">mdi-map-marker-plus</v-icon>Add Sample Loaction
+                        </v-btn>
+                        <v-btn class="mt-4 mx-2" dark color="green" @click="resetShowBuildingAreaFunc()">
+                          <v-icon class="pr-1" dark>mdi-arrow-u-up-left-bold</v-icon>Reset
+                        </v-btn>
+                        <v-btn class="mt-4" dark color="orange" @click="setShowBuildingAreaFunc()">
+                          <v-icon dark class="pr-1">mdi-settings</v-icon>Set
+                        </v-btn>
+                      </div>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+                <v-divider></v-divider>
+                <h4 class="mt-2">Flooded Board</h4>
                 <div class="mt-2 d-flex align-center">
                   <v-switch
                     class="mt-0"
@@ -91,7 +140,7 @@
                     @change="showFloodedAreaFunc(switch3, 'big_egg')"
                   ></v-switch>
                   <v-btn class="ml-4" color="red" x-small dark fab >
-                    <v-icon color="white" @click="cameraFlyToFunc(floodedList['big_egg'].cameraPosition)">mdi-airplane-takeoff</v-icon>
+                    <v-icon color="white" @click="cameraFlyToFunc('big_egg')">mdi-airplane-takeoff</v-icon>
                   </v-btn>
                 </div>
                 <div class="mt-2 d-flex">
@@ -104,11 +153,11 @@
                     @change="showFloodedAreaFunc(switch4, 'memorial_hall')"
                   ></v-switch>
                   <v-btn class="ml-4" color="red" x-small dark fab >
-                    <v-icon color="white" @click="cameraFlyToFunc(floodedList['memorial_hall'].cameraPosition)">mdi-airplane-takeoff</v-icon>
+                    <v-icon color="white" @click="cameraFlyToFunc('memorial_hall')">mdi-airplane-takeoff</v-icon>
                   </v-btn>
                 </div>
                 <v-divider></v-divider>
-                <h3 class="mt-2">Weather Simulation</h3>
+                <h4 class="mt-2">Weather Simulation</h4>
                 <v-radio-group v-model="weatherGroup" class="mt-2">
                   <v-radio
                     v-for="weather in weatherLists"
@@ -125,13 +174,14 @@
                     </template>
                   </v-radio>
                 </v-radio-group>
-                <v-btn
-                  class="mt-4"
-                  color="teal" 
-                  @click="cameraFlyToFunc(originalPosition)"
-                >
-                  <span class="white--text">返回初始視角</span> 
-                </v-btn>
+                <div class="mb-4">
+                  <v-btn
+                    color="teal" 
+                    @click="cameraFlyToFunc('origin')"
+                  >
+                    <span class="white--text">返回初始視角</span> 
+                  </v-btn>
+                </div>
               </div>
             </div>
           </div>
@@ -146,7 +196,7 @@ import customApi from "@/mixins/custom-api.js"
 import wgOl from "@/mixins/wg-ol.js"
 import cesiumPlugin from "@/mixins/ol-cesium.js"
 import wgProj4 from "@/mixins/wg-proj4.js"
-import custumMap from "@/mixins/custum-map.js"
+import customMap from "@/mixins/custom-map.js"
 import Treeview from '@/components/vuetify-tools/Treeview.vue'
 import weather from '@/assets/cesium-object/weather.js'
 import floodedList from '@/assets/cesium-object/floodedList.js'
@@ -156,7 +206,7 @@ export default {
   components: {
     PopupInfo, Treeview
   },
-  mixins: [customApi, wgOl, wgProj4, cesiumPlugin, custumMap],
+  mixins: [customApi, wgOl, wgProj4, cesiumPlugin, customMap],
   data: () => ({
     originalPosition: {
       lon: 121.556,
@@ -190,57 +240,22 @@ export default {
     buildingState: false,
     switch3: false,
     switch4: false,
-    buildings: null,
+    testToggle: false,
     terrain: null,
-    floodedList: {
-      big_egg: {
-        areaName: '大巨蛋',
-        height: 15,
-        heightest: 40,
-        lowest: 15,
-        areaPoint: [
-          121.5579520324756,25.04493581866319,
-          121.55781944944574,25.0415166137583, 
-          121.56433540179435, 25.041329645403497, 
-          121.56667955480331, 25.045256324457515, 
-          121.56479249163466, 25.04469541048406, 
-          121.56238948850107, 25.04493585452839, 
-          121.55891028902674, 25.04500261794834, 
-        ],
-        cesiumItem: null,
-        active: true,
-        cameraPosition: {
-          lon: 121.55931651430299,
-          lat: 25.031606648776876,
-          height: 800
-        }
-      },
-      memorial_hall: {
-        areaName: '中正紀念堂',
-        height: 15,
-        heightest: 40,
-        lowest: 15,
-        areaPoint: [
-          121.51775259572933, 25.038465374569633, 
-          121.51669942171664, 25.034813667319295, 
-          121.52251213212672, 25.03226291284592, 
-          121.52405138645013, 25.035639439775327,
-        ],
-        cesiumItem: null,
-        active: true,
-        cameraPosition: {
-          lon: 121.52093034329343,
-          lat: 25.02601413412601,
-          height: 800
-        }
-      }
-    },
     isShowMapTools: true,
     positionStyle: '',
     mapRadio: 'hybrid',
     viewSwitch: true,
     weatherGroup: 'Cloudy',
-    weatherLists: ['Cloudy', 'Rain', 'Fog', 'Snow']
+    weatherLists: ['Cloudy', 'Rain', 'Fog', 'Snow'],
+    showBuildingAreaState: {
+      isSetBuilding: null,
+      point: [0,0,0,0]
+    },
+    upLat: 0,
+    bottomLat: 0,
+    leftLon: 0,
+    rightLon: 0,
   }),
   mounted: async function() {
     if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
@@ -259,7 +274,7 @@ export default {
       if(this.isShowMapTools) {
         this.positionStyle = ""
       } else {
-        this.positionStyle = 'transform: translateX(84%); height: 50%; top:22%;'
+        this.positionStyle = 'transform: translateX(89%); height: 50%; top:22%;'
       }
     },
     showFloodedAreaFunc(state, name){
@@ -282,31 +297,53 @@ export default {
         }
       }
     },
-    // showStaticFloodedAreaFunc(state){
-    //   let item = floodedList['memorial_hall']
-    //   if(state) {
-    //     if(floodedList['memorial_hall'].cesiumItem === null) {
-    //       floodedList['memorial_hall'].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
-    //     } else {
-    //       floodedList['memorial_hall'].cesiumItem.show = state
-    //     }
-    //   } else {
-    //     floodedList['memorial_hall'].cesiumItem.show = state
-    //   }
+    setShowBuildingAreaFunc(){
+      this.showBuildingAreaState.point[0] = this.upLat
+      this.showBuildingAreaState.point[1] = this.bottomLat
+      this.showBuildingAreaState.point[2] = this.leftLon
+      this.showBuildingAreaState.point[3] = this.rightLon
+      let lon = (Number(this.leftLon) + Number(this.rightLon)) / 2
+      let lat = Number(this.bottomLat) - 0.01
 
-    // },
-    cameraFlyToFunc(postion){
-      this.cameraFlyTo(this.ol3dData.scene, postion)
+      let cameraPosition = {
+        lon: lon,
+        lat: lat,
+        height: 1200
+      }
+      console.log(cameraPosition)
+      console.log(this.showBuildingAreaState)
+      this.adjustShowBuildingArea(this.showBuildingAreaState)
+      this.cameraFlyToFunc('building', cameraPosition)
+    },
+    resetShowBuildingAreaFunc(){
+      this.resetShowBuildingArea(this.showBuildingAreaState)
+    },
+    addSampleLoactionForShowBuildingFunc(){
+      this.upLat = 25.04538076919183
+      this.bottomLat = 25.04153912699482
+      this.leftLon = 121.55796412314149
+      this.rightLon = 121.56583135058975
+    },
+    cameraFlyToFunc(type, buildingLocation){
+      let position = ""
+      if(type === 'origin') {
+        position = this.originalPosition
+      } else if (type === 'building') {
+        position = buildingLocation
+      } else {
+        position = floodedList[type].cameraPosition
+      }
+      this.cameraFlyTo(this.ol3dData.scene, position)
     },
     addBuildingFunc(state){
       if(state === true) {
-        if(this.buildings === null) {
-          this.buildings = this.addBuilding(this.ol3dData.scene)
+        if(this.showBuildingAreaState.isSetBuilding === null) {
+          this.showBuildingAreaState.isSetBuilding = this.addBuilding(this.ol3dData.scene)
         } else {
-          this.hideBuilding(this.buildings, state)
+          this.hideBuilding(this.showBuildingAreaState.isSetBuilding, state)
         }
       } else {
-        this.hideBuilding(this.buildings, state)
+        this.hideBuilding(this.showBuildingAreaState.isSetBuilding, state)
       }
     },
     wrapInitMap: function() {
@@ -371,36 +408,6 @@ export default {
           //       currentThis.popupCol = currentThis.popInfo[popInfoName]
           //     }
           //     break;
-          //   case 'soilSand':
-          //     popInfoName = feature.getProperties().featureRemark.uid
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
-          //   case 'cctvPoint':
-          //     popInfoName = feature.getProperties().featureRemark.cctv_no
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
-          //   case 'floodForecast':
-          //     popInfoName = feature.getProperties().uid
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
-          //   case 'riverBed':
-          //     popInfoName = feature.getProperties().featureRemark.st_no
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
-          //   case 'trackingParticle':
-          //     popInfoName = feature.getProperties().featureRemark.st_no
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
           // }
         },
       })
@@ -438,7 +445,7 @@ export default {
   }
 }
 </script>
-<style>
+<style scoped>
 .mapBox {
   width: 100%;
   height: calc(100vh - 64px);

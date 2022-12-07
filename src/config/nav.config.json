@@ -15,7 +15,7 @@
       "text": "Cesium原始地圖",
       "icon": "mdi-clipboard-text-search-outline",
       "icon-alt": "mdi-clipboard-text-search-outline",
-      "href": "/prep/CesiumMap"
+      "href": "/map/CesiumMap"
     }
   ]
 }
