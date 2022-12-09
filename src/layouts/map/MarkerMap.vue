@@ -29,46 +29,6 @@
             Map Tools
           </v-alert>
           <div class="mx-4">
-            <!-- <div class="map-style">
-              <h3 class="yellow lighten-5">地圖類型選擇</h3>
-              <v-switch
-                color="green"
-                v-model="viewSwitch"
-                class="mt-2"
-                :hide-details="true"
-                :label="`${viewSwitch === false ? '2D':'3D'}地圖`"
-                @change="viewSwitchFunc(viewSwitch)"
-              ></v-switch>
-              <v-radio-group
-                v-model="mapRadio"
-                column
-              >
-                <v-radio
-                  label="Google標準地圖"
-                  color="red"
-                  value="standardRoadMap"
-                ></v-radio>
-                <v-radio
-                  label="Google衛星地圖"
-                  color="red darken-3"
-                  value="hybrid"
-                ></v-radio>
-                <v-radio
-                  label="Google純衛星地圖"
-                  color="indigo"
-                  value="satelliteOnly"
-                ></v-radio>
-              </v-radio-group>
-            </div>
-            <v-divider class="my-2"></v-divider> -->
-            <!-- <div class="openlayers-style">
-              <h3 class="yellow lighten-5">Openlayers 點位查詢</h3>
-              <Treeview
-                @openLayerName="openLayerName"
-                @closeLayerName="closeLayerName"
-              /> 
-            </div>
-            <v-divider class="my-2"></v-divider> -->
             <div class="cesium-style">
               <h3 class="yellow lighten-5">Cesium 效果</h3>
               <div class="mt-2">
@@ -131,7 +91,7 @@
                 </v-expansion-panels>
                 <v-divider></v-divider>
                 <h4 class="mt-2">Flooded Board</h4>
-                <div class="mt-2 d-flex align-center">
+                <div class="mt-2">
                   <v-switch
                     class="mt-0"
                     color="blue"
@@ -140,11 +100,17 @@
                     :label="'大巨蛋淹水區域'"
                     @change="showFloodedAreaFunc(switch3, 'big_egg')"
                   ></v-switch>
-                  <v-btn class="ml-4" color="red" x-small dark fab >
-                    <v-icon color="white" @click="cameraFlyToFunc('big_egg')">mdi-airplane-takeoff</v-icon>
-                  </v-btn>
+                  <div class="d-flex align-center my-2">
+                    <span class="mx-2">海拔：{{(+(floodedList['big_egg'].height)).toFixed(2)}} m</span>
+                    <v-btn x-small dark fab color="green">
+                      <v-icon color="white" @click="pluseFloodAreaFunc('big_egg')">mdi-pause-circle-outline</v-icon>
+                    </v-btn>
+                    <v-btn class="ml-2" color="red" x-small dark fab >
+                      <v-icon color="white" @click="cameraFlyToFunc('big_egg')">mdi-airplane-takeoff</v-icon>
+                    </v-btn>
+                  </div>
                 </div>
-                <div class="mt-2 d-flex">
+                <div class="mt-2">
                   <v-switch
                     class="mt-0"
                     color="blue"
@@ -153,9 +119,15 @@
                     :label="'中正紀念堂淹水區域'"
                     @change="showFloodedAreaFunc(switch4, 'memorial_hall')"
                   ></v-switch>
-                  <v-btn class="ml-4" color="red" x-small dark fab >
-                    <v-icon color="white" @click="cameraFlyToFunc('memorial_hall')">mdi-airplane-takeoff</v-icon>
-                  </v-btn>
+                  <div class="d-flex align-center my-2">
+                    <span class="mx-2">海拔：{{(+(floodedList['memorial_hall'].height)).toFixed(2)}} m</span>
+                    <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('memorial_hall')">
+                      <v-icon color="white">mdi-pause-circle-outline</v-icon>
+                    </v-btn>
+                    <v-btn class="ml-2" color="red" x-small dark fab  @click="cameraFlyToFunc('memorial_hall')">
+                      <v-icon color="white">mdi-airplane-takeoff</v-icon>
+                    </v-btn>
+                  </div>
                 </div>
                 <v-divider></v-divider>
                 <h4 class="mt-2">Weather Simulation</h4>
@@ -197,24 +169,19 @@
   </div>
 </template>
 <script>
-// import PopupInfo from "@/components/map/PopupInfo.vue"
 import customApi from "@/mixins/custom-api.js"
-import wgOl from "@/mixins/wg-ol.js"
-import cesiumPlugin from "@/mixins/ol-cesium.js"
+import customCesium from "@/mixins/custom-cesium.js"
 import wgProj4 from "@/mixins/wg-proj4.js"
-import customMap from "@/mixins/custom-map.js"
-// import Treeview from '@/components/vuetify-tools/Treeview.vue'
 import weather from '@/assets/cesium-object/weather.js'
-import floodedList from '@/assets/cesium-object/floodedList.js'
+import floodedLists from '@/assets/cesium-object/floodedList.js'
 import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
 
 export default {
   name: "MarkerMap",
   components: {
-    // PopupInfo, Treeview
     BasicProgressbarVue
   },
-  mixins: [customApi, wgOl, wgProj4, cesiumPlugin, customMap],
+  mixins: [customApi, wgProj4, customCesium],
   data: () => ({
     originalPosition: {
       lon: 121.556,
@@ -267,10 +234,16 @@ export default {
     cesiumViewer: null,
     cesiumScene: null,
     isLoading: true,
+    floodedList: null,
+    test: 0,
   }),
+  beforeMount() {
+    this.floodedList = floodedLists
+  },
   mounted: async function() {
     await this.initOriginCesium()
     this.doRoadingFunc(5000)
+    
     // if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
     // this.ol3dData = this.initCesium(this.map.mapTargetId)
     // this.setFullScreenControl(this.map.mapTargetId)
@@ -291,22 +264,32 @@ export default {
       }
     },
     showFloodedAreaFunc(state, name){
-      let item = floodedList[name]
+      let item = this.floodedList[name]
       if(state) {
-        if(floodedList[name].cesiumItem === null) {
-          floodedList[name].cesiumItem = this.addedFloodedPolygon(item)
+        if(this.floodedList[name].cesiumItem === null) {
+          this.floodedList[name].cesiumItem = this.addedFloodedPolygon(item, name)
         } else {
-          for(let entity of floodedList[name].cesiumItem._entities._array) {
+          for(let entity of this.floodedList[name].cesiumItem._entities._array) {
             if(entity._name === item.areaName) {
               entity._show = state
+              // this.floodedList[name].isPause = !state
             }
           }
         }
       } else {
-        for(let entity of floodedList[name].cesiumItem._entities._array) {
+        for(let entity of this.floodedList[name].cesiumItem._entities._array) {
           if(entity._name === item.areaName) {
             entity._show = state
+            // this.floodedList[name].isPause = !state
           }
+        }
+      }
+    },
+    pluseFloodAreaFunc(name){
+      let item = this.floodedList[name]
+      for(let entity of this.floodedList[name].cesiumItem._entities._array) {
+        if(entity._name === item.areaName) {
+          this.floodedList[name].isPause = !this.floodedList[name].isPause
         }
       }
     },
@@ -342,7 +325,7 @@ export default {
       } else if (type === 'building') {
         position = buildingLocation
       } else {
-        position = floodedList[type].cameraPosition
+        position = this.floodedList[type].cameraPosition
       }
       this.cameraFlyTo(this.cesiumScene, position)
     },

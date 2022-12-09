@@ -15,6 +15,7 @@ let floodedList = {
     ],
     cesiumItem: null,
     active: true,
+    isPause: false,
     cameraPosition: {
       lon: 121.55931651430299,
       lat: 25.031606648776876,
@@ -34,6 +35,7 @@ let floodedList = {
     ],
     cesiumItem: null,
     active: true,
+    isPause: false,
     cameraPosition: {
       lon: 121.52093034329343,
       lat: 25.02601413412601,

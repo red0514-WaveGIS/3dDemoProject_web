@@ -1,6 +1,4 @@
-import * as Cesium from '../../node_modules/cesium/Source/Cesium.js';
-// import "cesium/widgets.css"
-import OLCesium from 'ol-cesium';
+import * as Cesium from 'cesium';
 
 export default {
   data: () => ({
@@ -26,33 +24,28 @@ export default {
     }, 
   }),
   methods: {
-    initCesium(targetId) {
+    initOriginCesium () {
       window['Cesium'] = Cesium
       Cesium.Ion.defaultAccessToken = this.token;
-      const ol2Map = this.maps[targetId]
-      const ol3d = new OLCesium({
-        map: ol2Map,
-        time() {
-          return Cesium.JulianDate.now();
-        },
-      }); // ol2dMap is the ol.Map instance
-      const scene = ol3d.getCesiumScene()
+      let terrainModels = Cesium.createWorldTerrain();
+      // let terrainModels = Cesium.createDefaultTerrainProviderViewModels();
+      const viewer = new Cesium.Viewer('cesiumContainer', {
+        terrainProvider: terrainModels,
+      })
+      
+      // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
+      viewer.infoBox.frame.removeAttribute("sandbox")
+      viewer.infoBox.frame.src = "about:blank"
+      viewer.scene.globe.depthTestAgainstTerrain = true
 
-      // 加入地形
-      this.addTerrain(scene)
+      // this.getHeight(viewer, this.originalPosition.lon, this.originalPosition.lat)
 
-      // 地上物定位
-      scene.globe.depthTestAgainstTerrain = true
 
-      // 視角移動
-      this.cameraFlyTo(scene, this.originalPosition)
-
-      // 回存ol-cesium資料
-      let data = {
-        scene: scene,
-        ol3d: ol3d
-      }
-      return data
+      this.hideTimer(viewer)
+      this.cameraFlyTo(viewer.scene, this.originalPosition)
+      
+      this.cesiumViewer = viewer
+      this.cesiumScene = viewer.scene
     },
     changeCesiumSource(ol3d, newSourceName){
       ol3d.getCesiumScene().imageryLayers._layers = ol3d.getCesiumScene().imageryLayers._layers.map(el=> {
@@ -133,33 +126,39 @@ export default {
     hideBuilding(building, state){
       building.show = state
     },
-    addedFloodedPolygon(item) {
+    addedFloodedPolygon(item,name) {
       // 淹水區域座標
       let floodedAreaPoint = item.areaPoint
 
       // 加入動態高度
       let height = 0
       let isActive = item.active
+      let isPause = true
+      let currentThis = this
       if(isActive) {
         height = new Cesium.CallbackProperty(function () {
-          if(isPluse) {
-            if(item.height > item.heightest) {
-              isPluse = false
-            }
-            item.height += 0.1
+          if(currentThis.floodedList[name].isPause) {
+            return item.height
           } else {
-            if(item.height < item.lowest) {
-              isPluse = true
+            if(isPause) {
+              if(item.height > item.heightest) {
+                isPause = false
+              }
+              item.height += 0.05
+            } else {
+              if(item.height < item.lowest) {
+                isPause = true
+              }
+              item.height -= 0.05
             }
-            item.height -= 0.1
+            currentThis.floodedList[name].height = item.height
+            return item.height
           }
-          return item.height
         }, false)
       } else {
         height = item.height
       }
       // 加入形狀
-      let isPluse = true
       let materialType = Cesium.Color.DEEPSKYBLUE.withAlpha(0.7)
       let entity = {
           name: item.areaName,
@@ -218,6 +217,10 @@ export default {
     removeWeather(scene){
       scene.postProcessStages.removeAll();
     },
+    getHeight(viewer, longitude, latitude){
+      let height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromDegrees(longitude, latitude))
+      console.log(height)
+    },
     cameraFlyTo(scene, position){
       scene.camera.flyTo({
           destination : Cesium.Cartesian3.fromDegrees(position.lon, position.lat, position.height),
@@ -227,35 +230,10 @@ export default {
         }
       });
     },
-    setGetLonLatCallback() {
-
+    hideTimer(viewer) {
+      viewer.animation.container.style.visibility = 'hidden'
+      viewer.timeline.container.style.visibility = 'hidden'
+      viewer.forceResize();
     },
-    // ORIGINAL CESIUM FUNCTION ===================================================================
-    initOriginCesium () {
-      window['Cesium'] = Cesium
-      Cesium.Ion.defaultAccessToken = this.token;
-      const viewer = new Cesium.Viewer('cesiumContainer', {terrainProvider: Cesium.createWorldTerrain(),})
-      
-      // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
-      viewer.infoBox.frame.removeAttribute("sandbox")
-      viewer.infoBox.frame.src = "about:blank"
-      viewer.scene.globe.depthTestAgainstTerrain = true
-
-
-      // viewer.scene.primitives.add(Cesium.createOsmBuildings({
-      //   style: new Cesium.Cesium3DTileStyle({
-      //     color: {
-      //       conditions: [
-      //         ["${feature['building']} === 'school'", "color('#00FF00')"],
-      //         [true, "color('#ffffff')"]
-      //       ]
-      //     }
-      //   })
-      // }))
-      
-      this.cameraFlyTo(viewer.scene, this.originalPosition)
-      this.cesiumViewer = viewer
-      this.cesiumScene = viewer.scene
-    }
-  }
+  },
 }
