@@ -1,14 +1,15 @@
 <template>
   <div>
     <div class="mapBox">
-      <div id="wrapMap">
+      <div id="cesiumContainer"></div>
+      <!-- <div id="wrapMap">
         <div id="MarkerMap"></div>
         <div id="popup" class="ol-popup">
           <PopupInfo 
             :popupContent="popupCol" 
           ></PopupInfo>
         </div>
-      </div>
+      </div> -->
       <div 
         class="d-flex control_plate"
         :style="positionStyle"
@@ -28,7 +29,7 @@
             Map Tools
           </v-alert>
           <div class="mx-4">
-            <div class="map-style">
+            <!-- <div class="map-style">
               <h3 class="yellow lighten-5">地圖類型選擇</h3>
               <v-switch
                 color="green"
@@ -59,15 +60,15 @@
                 ></v-radio>
               </v-radio-group>
             </div>
-            <v-divider class="my-2"></v-divider>
-            <div class="openlayers-style">
+            <v-divider class="my-2"></v-divider> -->
+            <!-- <div class="openlayers-style">
               <h3 class="yellow lighten-5">Openlayers 點位查詢</h3>
               <Treeview
                 @openLayerName="openLayerName"
                 @closeLayerName="closeLayerName"
               /> 
             </div>
-            <v-divider class="my-2"></v-divider>
+            <v-divider class="my-2"></v-divider> -->
             <div class="cesium-style">
               <h3 class="yellow lighten-5">Cesium 效果</h3>
               <div class="mt-2">
@@ -187,24 +188,31 @@
           </div>
         </div>
       </div>
+      <BasicProgressbarVue 
+        v-if="isLoading"
+        :dataSize="200"
+        
+      />
     </div>
   </div>
 </template>
 <script>
-import PopupInfo from "@/components/map/PopupInfo.vue"
+// import PopupInfo from "@/components/map/PopupInfo.vue"
 import customApi from "@/mixins/custom-api.js"
 import wgOl from "@/mixins/wg-ol.js"
 import cesiumPlugin from "@/mixins/ol-cesium.js"
 import wgProj4 from "@/mixins/wg-proj4.js"
 import customMap from "@/mixins/custom-map.js"
-import Treeview from '@/components/vuetify-tools/Treeview.vue'
+// import Treeview from '@/components/vuetify-tools/Treeview.vue'
 import weather from '@/assets/cesium-object/weather.js'
 import floodedList from '@/assets/cesium-object/floodedList.js'
+import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
 
 export default {
   name: "MarkerMap",
   components: {
-    PopupInfo, Treeview
+    // PopupInfo, Treeview
+    BasicProgressbarVue
   },
   mixins: [customApi, wgOl, wgProj4, cesiumPlugin, customMap],
   data: () => ({
@@ -242,8 +250,8 @@ export default {
     switch4: false,
     testToggle: false,
     terrain: null,
-    isShowMapTools: true,
-    positionStyle: '',
+    isShowMapTools: false,
+    positionStyle: 'transform: translateX(89%); height: 50%; top:22%;',
     mapRadio: 'hybrid',
     viewSwitch: true,
     weatherGroup: 'Cloudy',
@@ -256,13 +264,18 @@ export default {
     bottomLat: 0,
     leftLon: 0,
     rightLon: 0,
+    cesiumViewer: null,
+    cesiumScene: null,
+    isLoading: true,
   }),
   mounted: async function() {
-    if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
-    this.ol3dData = this.initCesium(this.map.mapTargetId)
-    this.setFullScreenControl(this.map.mapTargetId)
+    await this.initOriginCesium()
+    this.doRoadingFunc(5000)
+    // if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
+    // this.ol3dData = this.initCesium(this.map.mapTargetId)
+    // this.setFullScreenControl(this.map.mapTargetId)
     // 開啟3D地圖
-    this.viewSwitchFunc(true)
+    // this.viewSwitchFunc(true)
     // this.addBuildingFunc(true)
   },
   methods: {
@@ -272,16 +285,16 @@ export default {
     collapseFunc(){
       this.isShowMapTools = !this.isShowMapTools
       if(this.isShowMapTools) {
-        this.positionStyle = ""
+        this.positionStyle = ''
       } else {
-        this.positionStyle = 'transform: translateX(89%); height: 50%; top:22%;'
+        this.positionStyle = "transform: translateX(89%); height: 50%; top:22%;"
       }
     },
     showFloodedAreaFunc(state, name){
       let item = floodedList[name]
       if(state) {
         if(floodedList[name].cesiumItem === null) {
-          floodedList[name].cesiumItem = this.addedFloodedPolygon(this.ol3dData.ol3d, item)
+          floodedList[name].cesiumItem = this.addedFloodedPolygon(item)
         } else {
           for(let entity of floodedList[name].cesiumItem._entities._array) {
             if(entity._name === item.areaName) {
@@ -310,8 +323,6 @@ export default {
         lat: lat,
         height: 1200
       }
-      console.log(cameraPosition)
-      console.log(this.showBuildingAreaState)
       this.adjustShowBuildingArea(this.showBuildingAreaState)
       this.cameraFlyToFunc('building', cameraPosition)
     },
@@ -333,84 +344,20 @@ export default {
       } else {
         position = floodedList[type].cameraPosition
       }
-      this.cameraFlyTo(this.ol3dData.scene, position)
+      this.cameraFlyTo(this.cesiumScene, position)
     },
-    addBuildingFunc(state){
+    addBuildingFunc(){
+      let state = this.buildingState
       if(state === true) {
         if(this.showBuildingAreaState.isSetBuilding === null) {
-          this.showBuildingAreaState.isSetBuilding = this.addBuilding(this.ol3dData.scene)
+          this.showBuildingAreaState.isSetBuilding = this.addBuilding()
+          this.doRoadingFunc(7000)
         } else {
           this.hideBuilding(this.showBuildingAreaState.isSetBuilding, state)
         }
       } else {
         this.hideBuilding(this.showBuildingAreaState.isSetBuilding, state)
       }
-    },
-    wrapInitMap: function() {
-      this.initMap(this.map.mapTargetId, this.EPSG4326ToEPSG3857([this.map.lon, this.map.lat]))
-      this.setOverlayMap("MarkerMap", "pop", "popup")
-      // this.setInfoPopup()
-    },
-    seletedMapSource: function(selected) {
-      this.mapSource = selected
-    },
-    closeLayerName: function(selected) {
-      selected.forEach(l => {
-        this.setLayerStatus(false,l)
-      })
-    },
-    openLayerName: function(selected) {
-      selected.forEach(l => {
-        this.setLayerStatus(true,l)
-      })
-    },
-    // 圖層開關
-    setLayerStatus: async function(status,obj) {
-      let layerName = obj.layerName
-      let type = obj.type
-      // let styleRemark
-      if(status) {
-        if(this.getLayerByLayerName(this.map.mapTargetId,layerName) === undefined) {
-          switch (type) {
-            case 'point':
-              this.custumPointFunc(this.map.mapTargetId, layerName)
-              break;
-            case 'polygon':
-              this.customPolygonFunc(this.map.mapTargetId, layerName)
-              break;
-          }
-        } else {
-          this.setLayerVisibleByLayerName(this.map.mapTargetId,layerName,status)
-        }
-      } else {
-        this.setLayerVisibleByLayerName(this.map.mapTargetId,layerName,status)
-      }
-    },
-    setInfoPopup: function() {
-      // let currentThis = this
-      this.setFeatureClickEvent(this.map.mapTargetId, "pop", {
-        hasFeature: function(elementId, feature) {
-          console.log(elementId)
-          console.log(feature)
-          // 用 styleRemark 判斷
-          // let pupupStyleRemark = feature.getProperties().styleRemark
-          // let popInfoName
-          // switch (pupupStyleRemark) {
-          //   case 'waterVolume':
-          //     popInfoName = feature.getProperties().featureRemark.st_no
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
-          //   case 'waterSpeed':
-          //     popInfoName = feature.getProperties().featureRemark.uid
-          //     if(currentThis.popInfo[popInfoName]) {
-          //       currentThis.popupCol = currentThis.popInfo[popInfoName]
-          //     }
-          //     break;
-          // }
-        },
-      })
     },
     turnBackIconFunc(weather){
       let icon = ""
@@ -429,6 +376,12 @@ export default {
           break;
       }
       return icon
+    },
+    doRoadingFunc(time){
+      this.isLoading = true
+      setTimeout(() => {
+        this.isLoading = false  
+      }, time)
     }
   },
   watch: {
@@ -437,9 +390,9 @@ export default {
       this.changeCesiumSource(this.ol3dData.ol3d, this.mapRadio)
     },
     weatherGroup(){
-      this.removeWeather(this.ol3dData)
+      this.removeWeather(this.cesiumScene)
       if(this.weatherGroup !== 'Cloudy') {
-        this.addWeather(this.ol3dData, weather[this.weatherGroup], this.weatherGroup)
+        this.addWeather(this.cesiumScene, weather[this.weatherGroup], this.weatherGroup)
       }
     }
   }
@@ -454,6 +407,10 @@ export default {
   z-index: 1;
   left: 0;
   top: 0;
+}
+#cesiumContainer {
+  width: 100%;
+  height: 100%;
 }
 .control_plate {
   transition: 1s all;
@@ -473,6 +430,8 @@ export default {
   transition: 1s all;
   background-color: rgba(84,110,122,0.8);
   height: 100%;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 .collapse:hover{
   background-color: rgba(84,110,122,0.95);

@@ -1,13 +1,11 @@
 <template>
   <v-app id="mainContainer">
-    <LeftNavDrawerTree
+    <!-- <LeftNavDrawerTree
       :leftNavDrawer="leftNavDrawer"
       @navChildClick="goToPage"
-    ></LeftNavDrawerTree>
+    ></LeftNavDrawerTree> -->
     <TopAppBar
       :topBar="topBar"
-      @navIconClick="leftNavDrawer.model = !leftNavDrawer.model"
-      @navChangePage="doLogout"
     ></TopAppBar>
     <v-main class="mainBg">
       <v-container fluid>
@@ -22,15 +20,11 @@
 <script>
 import NavConfig from '@/config/nav.config.json'
 import TopAppBar from '@/components/app-bar/TopAppBar.vue'
-import LeftNavDrawerTree from '@/components/nav-drawer/LeftNavDrawer.vue'
-import { UserInfoApi,UserAuthApi } from 'wg-api-mixins'
 export default {
   name: 'index',
   components: {
     TopAppBar,
-    LeftNavDrawerTree
   },
-  mixins: [UserInfoApi,UserAuthApi],
   data: () => ({
     leftNavDrawer: {
       model: false,

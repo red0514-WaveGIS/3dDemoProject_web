@@ -6,7 +6,7 @@
     indeterminate
   >
     <template>
-      Loading...
+      <h1 class="white--text">Loading...</h1>
     </template>
   </v-progress-circular>
 </template>
@@ -36,5 +36,6 @@ export default {
     left: 50%;
     top: 50%;
     margin-left: -50px;
+    transform: translateY(-50%);
 }
 </style>

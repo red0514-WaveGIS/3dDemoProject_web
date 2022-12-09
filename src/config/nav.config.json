@@ -10,12 +10,6 @@
       "icon": "mdi-map",
       "icon-alt": "mdi-map",
       "href": "/map/MarkerMap"
-    },
-    {
-      "text": "Cesium原始地圖",
-      "icon": "mdi-clipboard-text-search-outline",
-      "icon-alt": "mdi-clipboard-text-search-outline",
-      "href": "/map/CesiumMap"
     }
   ]
 }

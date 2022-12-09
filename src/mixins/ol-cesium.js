@@ -80,7 +80,7 @@ export default {
     toggle3Dmap(ol3d, state){
       ol3d.setEnabled(state)
     },
-    addBuilding(scene){
+    addBuilding(){
       const osmBuildingsTileset = Cesium.createOsmBuildings({
         style: new Cesium.Cesium3DTileStyle({
           color : {
@@ -90,15 +90,12 @@ export default {
             ]
           },
           show: null,
-          // show: this.setShowBuildingConditionString(
-          //   25.04538076919183,
-          //   25.04153912699482,
-          //   121.55796412314149,
-          //   121.56583135058975
-          // )
         }),
       })
-      const sceneBuilding = scene.primitives.add(osmBuildingsTileset)
+      // console.log(osmBuildingsTileset)
+      let sceneBuilding = this.cesiumScene.primitives.add(osmBuildingsTileset)
+
+      // const sceneBuilding = scene.primitives.add(osmBuildingsTileset)
       return sceneBuilding
     },
     adjustShowBuildingArea(sceneBuilding){
@@ -136,7 +133,7 @@ export default {
     hideBuilding(building, state){
       building.show = state
     },
-    addedFloodedPolygon(ol3d, item) {
+    addedFloodedPolygon(item) {
       // 淹水區域座標
       let floodedAreaPoint = item.areaPoint
 
@@ -182,8 +179,8 @@ export default {
             show: true
           }
       }
-      ol3d.getDataSourceDisplay().defaultDataSource.entities.add(entity)
-      return ol3d.getDataSourceDisplay().defaultDataSource.entities
+      this.cesiumViewer.entities.add(entity)
+      return this.cesiumViewer.entities
     },
     addTerrain(scene){
       // 加入3D地形 Cesium的 DEM圖層
@@ -212,14 +209,14 @@ export default {
       console.log(entity)
       ol3d.getDataSourceDisplay().defaultDataSource.entities.add(entity)
     },
-    addWeather(ol3d, weather, name){
-      ol3d.scene.postProcessStages.add(new Cesium.PostProcessStage({
+    addWeather(scene, weather, name){
+      scene.postProcessStages.add(new Cesium.PostProcessStage({
         name: name,
         fragmentShader: weather,
       }))
     },
-    removeWeather(ol3d){
-      ol3d.scene.postProcessStages.removeAll();
+    removeWeather(scene){
+      scene.postProcessStages.removeAll();
     },
     cameraFlyTo(scene, position){
       scene.camera.flyTo({
@@ -233,31 +230,32 @@ export default {
     setGetLonLatCallback() {
 
     },
-    // ORIGINAL CESIUM FUNCTION
+    // ORIGINAL CESIUM FUNCTION ===================================================================
     initOriginCesium () {
       window['Cesium'] = Cesium
       Cesium.Ion.defaultAccessToken = this.token;
-      const viewer = new Cesium.Viewer('cesiumContainer', { terrainProvider: Cesium.createWorldTerrain()});
-      viewer.scene.primitives.add(Cesium.createOsmBuildings({
-        style: new Cesium.Cesium3DTileStyle({
-          color: {
-            conditions: [
-              // ["${feature['building']} === 'hospital'", "color('#0000FF')"],
-              // ["${feature['building']} === 'school'", "color('#00FF00')"],
-              ["${feature['sport']} === true", "color(red)"],
-              [true, "color('#ffffff')"]
-            ]
-          }
-        })
-      }))
+      const viewer = new Cesium.Viewer('cesiumContainer', {terrainProvider: Cesium.createWorldTerrain(),})
+      
+      // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
+      viewer.infoBox.frame.removeAttribute("sandbox")
+      viewer.infoBox.frame.src = "about:blank"
+      viewer.scene.globe.depthTestAgainstTerrain = true
 
-      viewer.scene.camera.flyTo({
-        destination : Cesium.Cartesian3.fromDegrees(121.52093034329343, 25.02601413412601, 800),
-        orientation : {
-        heading : Cesium.Math.toRadians(10),
-        pitch : Cesium.Math.toRadians(-45),
-      }
-      })
+
+      // viewer.scene.primitives.add(Cesium.createOsmBuildings({
+      //   style: new Cesium.Cesium3DTileStyle({
+      //     color: {
+      //       conditions: [
+      //         ["${feature['building']} === 'school'", "color('#00FF00')"],
+      //         [true, "color('#ffffff')"]
+      //       ]
+      //     }
+      //   })
+      // }))
+      
+      this.cameraFlyTo(viewer.scene, this.originalPosition)
+      this.cesiumViewer = viewer
+      this.cesiumScene = viewer.scene
     }
   }
 }
