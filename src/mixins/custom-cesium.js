@@ -176,7 +176,14 @@ export default {
             font : '14pt monospace',
             outlineWidth : 2,
             show: true
-          }
+          },
+          description: `
+            <div style="padding: 10px; height:400px;">
+              <h3 style="color:red">${item.areaName}<h3>
+              <h3 style="color:skyblue">海平面高度 ${item.height} cm<h3>
+              <img src="${item.src}" width="400" heigh="auto">
+            </div>
+          `
       }
       this.cesiumViewer.entities.add(entity)
       return this.cesiumViewer.entities

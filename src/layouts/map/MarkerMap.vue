@@ -102,11 +102,11 @@
                   ></v-switch>
                   <div class="d-flex align-center my-2">
                     <span class="mx-2">海拔：{{(+(floodedList['big_egg'].height)).toFixed(2)}} m</span>
-                    <v-btn x-small dark fab color="green">
-                      <v-icon color="white" @click="pluseFloodAreaFunc('big_egg')">mdi-pause-circle-outline</v-icon>
+                    <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('big_egg')">
+                      <v-icon color="white">mdi-pause-circle-outline</v-icon>
                     </v-btn>
-                    <v-btn class="ml-2" color="red" x-small dark fab >
-                      <v-icon color="white" @click="cameraFlyToFunc('big_egg')">mdi-airplane-takeoff</v-icon>
+                    <v-btn class="ml-2" color="red" x-small dark fab @click="cameraFlyToFunc('big_egg')">
+                      <v-icon color="white">mdi-airplane-takeoff</v-icon>
                     </v-btn>
                   </div>
                 </div>
@@ -243,7 +243,6 @@ export default {
   mounted: async function() {
     await this.initOriginCesium()
     this.doRoadingFunc(5000)
-    
     // if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
     // this.ol3dData = this.initCesium(this.map.mapTargetId)
     // this.setFullScreenControl(this.map.mapTargetId)

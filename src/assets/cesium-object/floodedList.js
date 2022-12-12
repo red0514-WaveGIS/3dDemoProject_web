@@ -1,9 +1,9 @@
 let floodedList = {
   big_egg: {
-    areaName: '大巨蛋',
-    height: 15,
+    areaName: '大巨蛋淹水區域',
+    height: 20,
     heightest: 40,
-    lowest: 15,
+    lowest: 20,
     areaPoint: [
       121.5579520324756,25.04493581866319,
       121.55781944944574,25.0415166137583, 
@@ -20,10 +20,11 @@ let floodedList = {
       lon: 121.55931651430299,
       lat: 25.031606648776876,
       height: 800
-    }
+    },
+    src: "http://192.168.1.23/3dDemoProject_web/DommyImg/flooded.jpg",
   },
   memorial_hall: {
-    areaName: '中正紀念堂',
+    areaName: '中正紀念堂淹水區域',
     height: 15,
     heightest: 40,
     lowest: 15,
@@ -40,7 +41,8 @@ let floodedList = {
       lon: 121.52093034329343,
       lat: 25.02601413412601,
       height: 800
-    }
+    },
+    src: "http://192.168.1.23/3dDemoProject_web/DommyImg/flooded2.png",
   }
 }
 
