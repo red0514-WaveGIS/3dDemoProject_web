@@ -103,7 +103,7 @@
                   <div class="d-flex align-center my-2">
                     <span class="mx-2">海拔：{{(+(floodedList['big_egg'].height)).toFixed(2)}} m</span>
                     <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('big_egg')">
-                      <v-icon color="white">mdi-pause-circle-outline</v-icon>
+                      <v-icon color="white">{{this.floodedList['big_egg'].isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
                     </v-btn>
                     <v-btn class="ml-2" color="red" x-small dark fab @click="cameraFlyToFunc('big_egg')">
                       <v-icon color="white">mdi-airplane-takeoff</v-icon>
@@ -122,7 +122,7 @@
                   <div class="d-flex align-center my-2">
                     <span class="mx-2">海拔：{{(+(floodedList['memorial_hall'].height)).toFixed(2)}} m</span>
                     <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('memorial_hall')">
-                      <v-icon color="white">mdi-pause-circle-outline</v-icon>
+                      <v-icon color="white">{{this.floodedList['memorial_hall'].isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
                     </v-btn>
                     <v-btn class="ml-2" color="red" x-small dark fab  @click="cameraFlyToFunc('memorial_hall')">
                       <v-icon color="white">mdi-airplane-takeoff</v-icon>
@@ -262,11 +262,13 @@ export default {
         this.positionStyle = "transform: translateX(89%); height: 50%; top:22%;"
       }
     },
-    showFloodedAreaFunc(state, name){
+    async showFloodedAreaFunc(state, name){
       let item = this.floodedList[name]
       if(state) {
         if(this.floodedList[name].cesiumItem === null) {
-          this.floodedList[name].cesiumItem = this.addedFloodedPolygon(item, name)
+          this.isLoading = true
+          this.floodedList[name].cesiumItem = await this.addedFloodedPolygon(item, name)
+          this.isLoading = false
         } else {
           for(let entity of this.floodedList[name].cesiumItem._entities._array) {
             if(entity._name === item.areaName) {

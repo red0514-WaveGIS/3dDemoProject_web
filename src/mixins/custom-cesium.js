@@ -1,4 +1,6 @@
 import * as Cesium from 'cesium';
+import * as turf from '@turf/turf'
+
 
 export default {
   data: () => ({
@@ -28,18 +30,13 @@ export default {
       window['Cesium'] = Cesium
       Cesium.Ion.defaultAccessToken = this.token;
       let terrainModels = Cesium.createWorldTerrain();
-      // let terrainModels = Cesium.createDefaultTerrainProviderViewModels();
       const viewer = new Cesium.Viewer('cesiumContainer', {
         terrainProvider: terrainModels,
       })
-      
       // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
       viewer.infoBox.frame.removeAttribute("sandbox")
       viewer.infoBox.frame.src = "about:blank"
       viewer.scene.globe.depthTestAgainstTerrain = true
-
-      // this.getHeight(viewer, this.originalPosition.lon, this.originalPosition.lat)
-
 
       this.hideTimer(viewer)
       this.cameraFlyTo(viewer.scene, this.originalPosition)
@@ -126,10 +123,10 @@ export default {
     hideBuilding(building, state){
       building.show = state
     },
-    addedFloodedPolygon(item,name) {
+    async addedFloodedPolygon(item,name) {
       // 淹水區域座標
       let floodedAreaPoint = item.areaPoint
-
+      let {highest, lowest}= await this.getHeighestLowest(floodedAreaPoint)
       // 加入動態高度
       let height = 0
       let isActive = item.active
@@ -180,7 +177,8 @@ export default {
           description: `
             <div style="padding: 10px; height:400px;">
               <h3 style="color:red">${item.areaName}<h3>
-              <h3 style="color:skyblue">海平面高度 ${item.height} cm<h3>
+              <h3 style="color:skyblue">最高海平面高度 ${highest} cm<h3>
+              <h3 style="color:skyblue">最低海平面高度 ${lowest} cm<h3>
               <img src="${item.src}" width="400" heigh="auto">
             </div>
           `
@@ -188,17 +186,50 @@ export default {
       this.cesiumViewer.entities.add(entity)
       return this.cesiumViewer.entities
     },
-    addTerrain(scene){
-      // 加入3D地形 Cesium的 DEM圖層
-      const terrainProvider = new Cesium.createWorldTerrain()
+    async getHeighestLowest(floodedAreaPoint){
+      let firstPoint = [floodedAreaPoint[0],floodedAreaPoint[1]]
+      let twoSeatTemp = []
+      let realSourcePoint = []
+      for(let num in floodedAreaPoint) {
+        if(num % 2 === 0) {
+          twoSeatTemp[0] = floodedAreaPoint[num]
+        } else {
+          twoSeatTemp[1] = floodedAreaPoint[num]
+        }
+        if(twoSeatTemp.length === 2) {
+          realSourcePoint.push(twoSeatTemp)
+          twoSeatTemp = []
+        }
+      }
+      realSourcePoint.push(firstPoint)
+      const turfPolygon = turf.polygon([realSourcePoint]);
+      const turfExtent = turf.bbox(turfPolygon)
+      const turfSamplePoints=turf.pointGrid(turfExtent,0.003,{
+          units:'kilometers',
+          mask: turfPolygon,
+      })
+      const cesiumSamplePoints = [];
+      for (let i = 0; i < turfSamplePoints.features.length; i++) {
+        const coord = turfSamplePoints.features[i].geometry.coordinates;
+        cesiumSamplePoints.push(Cesium.Cartographic.fromDegrees(coord[0],coord[1]));
+      }
 
-      // 使用 NGINX的DEM切片數據
-      // const terrainProvider = new Cesium.createWorldTerrain({
-      //   url: 'http://192.168.1.243:8000/terrain/NxZ4xz2h',
-      // })
-
-      scene.terrainProvider = terrainProvider;
-      return terrainProvider
+      let highest = 0
+      let lowest = 8888
+      let promise = Cesium.sampleTerrainMostDetailed(this.cesiumViewer.terrainProvider,cesiumSamplePoints)
+      await promise.then(function(data){
+        data.forEach(point=>{
+          if (point.height>highest) {
+            highest = point.height.toFixed(2);
+          }
+          if (point.height<lowest) {
+            lowest = point.height.toFixed(2);
+          }
+        })
+      })
+      return {
+        highest, lowest
+      }
     },
     addPoint(ol3d){
       // 點位座標
@@ -223,10 +254,6 @@ export default {
     },
     removeWeather(scene){
       scene.postProcessStages.removeAll();
-    },
-    getHeight(viewer, longitude, latitude){
-      let height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromDegrees(longitude, latitude))
-      console.log(height)
     },
     cameraFlyTo(scene, position){
       scene.camera.flyTo({

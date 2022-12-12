@@ -13,6 +13,8 @@ import VuetifyConfirm from 'vuetify-confirm'
 import ECharts from '@/plugins/echarts'
 import XLSX from "@/plugins/xlsx"
 import VueDraggableResizable from 'vue-draggable-resizable'
+import * as turf from '@turf/turf'
+import * as Cesium from 'cesium';
 
 window.CESIUM_BASE_URL = '/'
 
@@ -25,6 +27,8 @@ Vue.use(VueAxios, axios)
 Vue.use(VuetifyConfirm, { vuetify })
 Vue.use(wgUI)
 Vue.use(ECharts)
+Vue.use(turf)
+Vue.use(Cesium)
 
 new Vue({
   vuetify,
