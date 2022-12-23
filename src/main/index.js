@@ -14,9 +14,7 @@ import ECharts from '@/plugins/echarts'
 import XLSX from "@/plugins/xlsx"
 import VueDraggableResizable from 'vue-draggable-resizable'
 import * as turf from '@turf/turf'
-import * as Cesium from 'cesium';
-
-window.CESIUM_BASE_URL = '/'
+import * as Cesium from 'cesium'
 
 // optionally import default styles
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css'

@@ -1,0 +1,67 @@
+<?xml version="1.0"?>	
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2"
+xmlns:atom="http://www.w3.org/2005/Atom">
+	<Document>
+		<Folder>
+			<name>一級監控路段</name>
+			<Placemark>
+				<name>台2線75K+000~84K+000</name>
+				<description>&lt;table border="1" padding="0" align="center" bordercolor="#BECBD3"&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;路線樁號&lt;/td&gt;&lt;td&gt;台2線75K+000~84K+000&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;所在區域&lt;/td&gt;&lt;td&gt;新北市 瑞芳區&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;起點經緯度&lt;/td&gt;&lt;td&gt;121.834500  25.126890&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;終點經緯度&lt;/td&gt;&lt;td&gt;121.914600  25.124040&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;管轄單位&lt;/td&gt;&lt;td&gt;公路總局 第一區養護工程處 基隆工務段&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;更新時間&lt;/td&gt;&lt;td&gt;2022-01-04 14:05:31&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td bgcolor="#BECBD3" align="center" width="100px"&gt;雨量站&lt;/td&gt;&lt;td&gt;				&lt;table border="1" padding="0" align="center" bordercolor="#BECBD3"&gt;
+					&lt;tr&gt;
+						 &lt;td colspan="2" bgcolor="#ececec">鼻頭角 C0A950&lt;/td&gt;
+				    &lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td&gt;[預警規則1]&lt;/td&gt;
+					    &lt;td&gt;24小時雨量(mm)大於等於150.0&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[預警規則2]&lt;/td&gt;
+					    &lt;td&gt;未設定&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[預警規則3]&lt;/td&gt;
+					    &lt;td&gt;未設定&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[警戒規則1]&lt;/td&gt;
+					    &lt;td&gt;24小時雨量(mm)大於等於200.0&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[警戒規則2]&lt;/td&gt;
+					    &lt;td&gt;未設定&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[警戒規則3]&lt;/td&gt;
+					    &lt;td&gt;未設定&lt;/td&gt;
+				    &lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td&gt;[行動規則1]&lt;/td&gt;
+					    &lt;td&gt;3小時雨量(mm)大於等於150.0&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[行動規則2]&lt;/td&gt;
+					    &lt;td&gt;未設定&lt;/td&gt;
+				    &lt;/tr&gt;
+				    &lt;tr&gt;
+						&lt;td&gt;[行動規則3]&lt;/td&gt;
+					    &lt;td&gt;24小時雨量(mm)大於等於350.0&lt;/td&gt;
+				    &lt;/tr&gt;			    
+				&lt;/table&gt;
+	&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</description>
+		 		<Snippet/>
+		 		<Style>
+		 			<LineStyle>
+		 			<color>ff0000ff</color>
+		 			<width>5</width>
+		 			</LineStyle>
+		 		</Style>
+					<LineString>
+					<tessellate>1</tessellate>
+					<coordinates>121.834455,25.126886 121.835355,25.127190 121.836342,25.127247 121.837313,25.127422 121.838295,25.127539 121.839280,25.127632 121.840266,25.127724 121.841241,25.127577 121.842127,25.127200 121.842971,25.126749 121.843954,25.126807 121.844920,25.126611 121.845883,25.126402 121.846830,25.126620 121.847787,25.126819 121.848710,25.126525 121.849593,25.126118 121.850528,25.125819 121.851466,25.125529 121.852436,25.125371 121.853347,25.125054 121.854244,25.124682 121.855203,25.124455 121.856167,25.124243 121.857125,25.124014 121.858083,25.123782 121.859068,25.123686 121.860053,25.123633 121.860818,25.124158 121.861525,25.124753 121.862335,25.124371 121.862560,25.123496 121.863174,25.122803 121.864068,25.122421 121.865015,25.122160 121.865978,25.121948 121.866962,25.121952 121.867937,25.122109 121.868785,25.122524 121.869434,25.123190 121.870405,25.123236 121.871377,25.123205 121.872218,25.123675 121.873036,25.124183 121.873992,25.124279 121.874814,25.123778 121.875619,25.123253 121.876473,25.122803 121.877452,25.122686 121.878423,25.122553 121.879361,25.122291 121.880293,25.122557 121.881215,25.122772 121.882190,25.122892 121.883158,25.123015 121.884124,25.123028 121.885063,25.122791 121.885829,25.122219 121.886592,25.121645 121.887299,25.121014 121.888207,25.120691 121.888997,25.120168 121.889749,25.119601 121.890734,25.119554 121.891666,25.119255 121.892641,25.119387 121.893623,25.119483 121.894582,25.119668 121.895506,25.119920 121.896395,25.119529 121.897315,25.119198 121.898291,25.119150 121.899255,25.119356 121.900091,25.119837 121.900970,25.120249 121.901675,25.120880 121.902347,25.121540 121.903187,25.122018 121.904116,25.122124 121.904876,25.121546 121.905752,25.121140 121.906741,25.121153 121.907691,25.121351 121.908495,25.121837 121.909484,25.121885 121.910309,25.122342 121.910986,25.122974 121.911938,25.123190 121.912660,25.123802 121.913617,25.124008 121.914593,25.124036	
+					</coordinates>
+     			</LineString>
+    		</Placemark>
+		</Folder>
+	</Document>	
+</kml>	
+	

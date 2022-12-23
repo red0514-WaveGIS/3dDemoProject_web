@@ -33,6 +33,14 @@ module.exports = {
           "^/api/user/": ""
         }
       },
+      "/api/floodedMap/": {
+        target: "http://192.168.1.142:5030/",
+        ws: false,
+        changeOrigin: true,
+        pathRewrite: {
+          "^/api/floodedMap/": ""
+        }
+      },
     }
   },
   pluginOptions: {
@@ -54,12 +62,6 @@ module.exports = {
     config
       .output
       .sourcePrefix(" ")
-		
-    // 這個在 Cesium 1.63 版本前要加，之前是使用 amd 模組，後來改用es Module
-    /* 
-     config
-       .amd({toUrlUndefined: true})
-    */ 
 
     config
       .module

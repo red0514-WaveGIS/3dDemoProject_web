@@ -147,13 +147,31 @@
                     </template>
                   </v-radio>
                 </v-radio-group>
-                <div class="mb-4">
-                  <v-btn
-                    color="teal" 
-                    @click="cameraFlyToFunc('origin')"
-                  >
-                    <span class="white--text">返回初始視角</span> 
-                  </v-btn>
+                <v-divider></v-divider>
+                <div class="my-4">
+                  <v-col cols="12">
+                    <div>
+                      <v-btn
+                        dark
+                        color="purple"
+                        @click="imgDailogIsOpen = true"
+                      >
+                        <v-icon color="white">mdi-water-off</v-icon>
+                        檢視淹水圖
+                      </v-btn>
+                    </div>
+                    <div>
+                      <small class="pink--text">*地圖中點擊右鍵獲取欲顯示淹水圖</small>
+                    </div>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-btn
+                      color="teal" 
+                      @click="cameraFlyToFunc('origin')"
+                    >
+                      <span class="white--text">返回初始視角</span> 
+                    </v-btn>
+                  </v-col>
                 </div>
               </div>
             </div>
@@ -163,7 +181,15 @@
       <BasicProgressbarVue 
         v-if="isLoading"
         :dataSize="200"
-        
+      />
+      <ImgDialog
+        :imgDailogIsOpen="imgDailogIsOpen"
+        :turnCurrentUrl="turnCurrentUrl"
+        @triggerClose="closeImgDialog"
+      />
+      <NotFoundDialog
+        :notFoundDailogIsOpen="notFoundDailogIsOpen"
+        @triggerClose="notFoundDailogIsOpen = false"
       />
     </div>
   </div>
@@ -175,11 +201,13 @@ import wgProj4 from "@/mixins/wg-proj4.js"
 import weather from '@/assets/cesium-object/weather.js'
 import floodedLists from '@/assets/cesium-object/floodedList.js'
 import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
+import ImgDialog from "@/components/dialog/ImgDialog.vue"
+import NotFoundDialog from "@/components/dialog/NotFoundDialog.vue"
 
 export default {
   name: "MarkerMap",
   components: {
-    BasicProgressbarVue
+    BasicProgressbarVue,ImgDialog,NotFoundDialog
   },
   mixins: [customApi, wgProj4, customCesium],
   data: () => ({
@@ -236,13 +264,24 @@ export default {
     isLoading: true,
     floodedList: null,
     test: 0,
+    currentPositionInfo: {
+      lonLat: '',
+      originalUrl: '',
+      floodUrl: ''
+    },
+    imgDailogIsOpen: false,
+    notFoundDailogIsOpen: false,
   }),
   beforeMount() {
     this.floodedList = floodedLists
   },
   mounted: async function() {
     await this.initOriginCesium()
+    // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度
+    this.setFeatureClickEvent(this.cesiumViewer)
+    
     this.doRoadingFunc(5000)
+
     // if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
     // this.ol3dData = this.initCesium(this.map.mapTargetId)
     // this.setFullScreenControl(this.map.mapTargetId)
@@ -361,13 +400,28 @@ export default {
       }
       return icon
     },
-    doRoadingFunc(time){
+    doRoadingFunc(time, state){
       this.isLoading = true
-      setTimeout(() => {
-        this.isLoading = false  
-      }, time)
-    }
+      if (time !== null) {
+        setTimeout(() => {
+          this.isLoading = false  
+        }, time)
+      } else {
+        this.isLoading = state
+      }
+    },
+    closeImgDialog(){
+      this.imgDailogIsOpen = false
+      this.currentPositionInfo.floodUrl = ""
+      this.currentPositionInfo.originalUrl = ""
+    },
   },
+  computed: {
+    turnCurrentUrl(){
+      let obj = this.currentPositionInfo
+      return obj
+    }
+  }, 
   watch: {
     mapRadio(){
       this.setBaseSourceByBaseSourceId(this.map.mapTargetId,this.mapRadio)
