@@ -21,26 +21,55 @@ export default {
       })
     },
     importKmlList: [
-      {name: 'oneRoad', path: '../kml/oneRoad.kml', positions: []},
-      {name: 'oneRoadTwo', path: '../kml/oneRoadTwo.kml', positions: []},
-      {name: 'cyclingPath', path: '../kml/cyclingPath.kml', positions: []},
-    ]
+      {name: 'oneRoad', path: '../testkml/oneRoad.kml', positions: []},
+      {name: 'oneRoadTwo', path: '../testkml/oneRoadTwo.kml', positions: []},
+      {name: 'cyclingPath', path: '../testkml/cyclingPath.kml', positions: []},
+    ],
+    // baseSources: {
+    //   standardRoadMap: { cName: "Google標準地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   somehowAlteredRoadMap: { cName: "Google標準地圖2", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   hybrid: { cName: "Google衛星地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   satelliteOnly: { cName: "Google純衛星地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=s&hl=pl&&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   terrain: { cName: "Google等高線地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   terrainOnly: { cName: "Google純等高線地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=t&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   roadsOnly: { cName: "Google道路地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
+    //   osm: { cName: "OpenStreetMap開放街圖地圖", source: new OSM() },
+    //   TGOSMAP_W: { cName: "TGOS電子地圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=TGOSMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    //   NLSCMAP_W: { cName: "通用版電子地圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=NLSCMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    //   F2IMAGE_W: { cName: "福衛二號影像", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=F2IMAGE_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    //   ROADMAP_W: { cName: "福衛二號混合圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=ROADMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    //   HILLSHADEMIX_W: { cName: "地形暈渲混合圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=HILLSHADEMIX_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    //   HILLSHADE_W: { cName: "地形暈渲圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=HILLSHADE_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    //   MOTCMAP_W: { cName: "路網數值圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=MOTCMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
+    // },
   }),
   methods: {
     async initOriginCesium () {
+      document.oncontextmenu = new Function("return false")
+
       window.CESIUM_BASE_URL = './'
       window['Cesium'] = Cesium
       Cesium.Ion.defaultAccessToken = this.token
       let terrainModels = Cesium.createWorldTerrain({
         requestVertexNormals : true
       })
+      // let terrainModels = new Cesium.ArcGISTiledElevationTerrainProvider({
+      //   url: 'https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer',
+      // })
+      // let terrainModels = new Cesium.CesiumTerrainProvider({
+      //   url: 'http://data.marsgis.cn/terrain',
+      // })
 
       const viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: terrainModels,
-        selectionIndicator: false,
-        shadows: false,
-        shouldAnimate: false,
+        imageryProvider: new Cesium.UrlTemplateImageryProvider({
+          url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        }),
+        terrainProvider: terrainModels
       })
+
+      // this.setTimer(viewer)
+      this.hideTimer(viewer)
+      
 
       // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
       viewer.infoBox.frame.removeAttribute("sandbox")
@@ -428,6 +457,31 @@ export default {
       viewer.animation.container.style.visibility = 'hidden'
       viewer.timeline.container.style.visibility = 'hidden'
       viewer.forceResize();
+    },
+    setTimer(){
+      // viewer.animation.viewModel.dateFormatter = DateTimeFormatter;
+      // viewer.animation.viewModel.timeFormatter = TimeFormatter; 
+      // viewer.timeline.makeLabel = DateTimeFormatter;
+      // function TimeFormatter (time, viewModel) {
+      //   return this.DateTimeFormatter(time, viewModel, true);
+      // } 
+      // function  DateTimeFormatter(datetime, viewModel, ignoredate) {
+      //   var julianDT = new Cesium.JulianDate();
+      //   Cesium.JulianDate.addHours(datetime, 8, julianDT);
+      //   var gregorianDT = Cesium.JulianDate.toGregorianDate(julianDT);
+      //   var objDT;
+      //   if (ignoredate){
+      //     objDT = '';
+      //   }else {
+      //     objDT = new Date(gregorianDT.year, gregorianDT.month - 1, gregorianDT.day);
+      //     objDT = gregorianDT.year + '年' + objDT.toLocaleString('zh-cn', { month: 'short' }) + gregorianDT.day + '日';
+      //     if (viewModel || gregorianDT.hour + gregorianDT.minute === 0){
+      //       return objDT 
+      //       objDT += '';
+      //     }
+      //   }
+      //   return objDT + Cesium.sprintf('%02d:%02d:%02d', gregorianDT.hour, gregorianDT.minute, gregorianDT.second);
+      // }
     },
     changeGoogleMap(viewer){
       let osm = new Cesium.OpenStreetMapImageryProvider(

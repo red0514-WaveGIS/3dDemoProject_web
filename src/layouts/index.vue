@@ -45,47 +45,10 @@ export default {
     privileges: [],
   }),
   mounted: function () {
-    // 依據不同 privilege 生成不同 nav
-    // let tempPrivileges = this.$store.state.userInfo
-    // let temp = []
-    // let system = []
-    // let systemManager = []
-    // for(let navItem of NavConfig.items) {
-    //   for(let userItem of tempPrivileges.privileges) {
-    //     if(userItem.name === navItem.text) {
-    //       temp.push(navItem)
-    //     }
-    //     if(userItem.name === "使用者紀錄" || userItem.name === "感測器管理" || userItem.name === "使用者管理" || userItem.name === "權限管理") {
-    //       let has = system.indexOf(userItem.name)
-    //       if (has=== -1) {
-    //         system.push(userItem.name)
-    //       }
-    //     }
-    //   }
-    //   if(navItem.text === "系統管理") {
-    //     systemManager.push(navItem)
-    //   }
-    // }
-    // let children = []
-    // if(system.length > 0) {
-    //   system.forEach(el=>{
-    //     systemManager[0].children.forEach(item=>{
-    //       if(el === item.text) {
-    //         children.push(item)
-    //       }
-    //     })
-    //   })
-    //   systemManager[0].children = children
-    // }
-
-    // this.leftNavDrawer.items = temp
+    // 鎖右鍵
+    document.oncontextmenu = new Function("return false")
   },
   methods: {
-    doLogout: function () {
-      sessionStorage.clear()
-      this.logout()
-      delete this.$http.defaults.headers.common["Authorization"]
-    },
     goToPage(item){
       if(item.blank){
         window.open(item.href, '_blank');
@@ -97,11 +60,6 @@ export default {
         }
       }
     },
-  },
-  computed: {
-    linkTitle: function () {
-       return this.$store.state.linkTitle
-    }
   }
 }
 </script>

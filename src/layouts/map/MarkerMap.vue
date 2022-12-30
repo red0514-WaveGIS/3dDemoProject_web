@@ -14,19 +14,19 @@
         class="d-flex control_plate"
         :style="positionStyle"
       >
-        <div class="collapse d-flex align-center">
+        <!-- <div class="collapse d-flex align-center">
           <span 
             @click="collapseFunc()" 
             class="arrow-style pr-2 white--text"
           >{{isShowMapTools === true ? "＞":"＜"}}</span>
-        </div>
+        </div> -->
         <div class="control_plate_bg mt-0 pt-0">
           <v-alert
             border="left"
             color="blue-grey darken-1"
             dark
           >
-            Map Tools
+            <h3>Map Tools</h3>
           </v-alert>
           <div class="mx-4">
             <div class="cesium-style">
@@ -177,6 +177,12 @@
             </div>
           </div>
         </div>
+        <div class="collapse d-flex align-center">
+          <span 
+            @click="collapseFunc()" 
+            class="arrow-style pr-2 white--text"
+          >{{isShowMapTools === true ? "＜":"＞"}}</span>
+        </div>
       </div>
       <BasicProgressbarVue 
         v-if="isLoading"
@@ -246,7 +252,7 @@ export default {
     testToggle: false,
     terrain: null,
     isShowMapTools: false,
-    positionStyle: 'transform: translateX(89%); height: 50%; top:22%;',
+    positionStyle: 'transform: translateX(-89%); height: 50%; top:22%;',
     mapRadio: 'hybrid',
     viewSwitch: true,
     weatherGroup: 'Cloudy',
@@ -298,7 +304,7 @@ export default {
       if(this.isShowMapTools) {
         this.positionStyle = ''
       } else {
-        this.positionStyle = "transform: translateX(89%); height: 50%; top:22%;"
+        this.positionStyle = "transform: translateX(-89%); height: 50%; top:22%;"
       }
     },
     async showFloodedAreaFunc(state, name){
@@ -457,19 +463,23 @@ export default {
   top: 0px;
   z-index: 2;
   height: 100%;
-  right: -10px;
+  left: 0;
+  overflow: hidden;
 }
 .control_plate_bg {
   background-color: rgba(255, 255, 255, 0.904);
   height: 100%;
   overflow-y: scroll;
 }
+.control_plate_bg::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
 .collapse {
   transition: 1s all;
   background-color: rgba(84,110,122,0.8);
   height: 100%;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 .collapse:hover{
   background-color: rgba(84,110,122,0.95);

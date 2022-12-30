@@ -33,8 +33,16 @@ module.exports = {
           "^/api/user/": ""
         }
       },
+      // "/api/floodedMap/": {
+      //   target: "http://192.168.1.142:5030/",
+      //   ws: false,
+      //   changeOrigin: true,
+      //   pathRewrite: {
+      //     "^/api/floodedMap/": ""
+      //   }
+      // },
       "/api/floodedMap/": {
-        target: "http://192.168.1.142:5030/",
+        target: "http://192.168.1.172:5030/",
         ws: false,
         changeOrigin: true,
         pathRewrite: {
