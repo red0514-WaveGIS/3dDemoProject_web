@@ -49,6 +49,14 @@ module.exports = {
           "^/api/floodedMap/": ""
         }
       },
+      "/api/3dtiles/": {
+        target: "https://3dtiles.nlsc.gov.tw/",
+        ws: false,
+        changeOrigin: true,
+        pathRewrite: {
+          "^/api/3dtiles/": ""
+        }
+      },
     }
   },
   pluginOptions: {

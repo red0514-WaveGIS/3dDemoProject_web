@@ -1,5 +1,6 @@
 let floodedList = {
   big_egg: {
+    name: "big_egg",
     areaName: '大巨蛋淹水區域',
     height: 20,
     heightest: 40,
@@ -14,7 +15,7 @@ let floodedList = {
       121.55891028902674, 25.04500261794834, 
     ],
     cesiumItem: null,
-    active: true,
+    active: false,
     isPause: false,
     cameraPosition: {
       lon: 121.55931651430299,
@@ -24,6 +25,7 @@ let floodedList = {
     src: "http://192.168.1.23/3dDemoProject_web/DommyImg/flooded.jpg",
   },
   memorial_hall: {
+    name: "memorial_hall",
     areaName: '中正紀念堂淹水區域',
     height: 15,
     heightest: 40,
@@ -35,7 +37,7 @@ let floodedList = {
       121.52405138645013, 25.035639439775327,
     ],
     cesiumItem: null,
-    active: true,
+    active: false,
     isPause: false,
     cameraPosition: {
       lon: 121.52093034329343,
@@ -43,7 +45,29 @@ let floodedList = {
       height: 800
     },
     src: "http://192.168.1.23/3dDemoProject_web/DommyImg/flooded2.png",
-  }
+  },
+  maple_garden: {
+    name: "maple_garden",
+    areaName: '秋紅谷淹水區域',
+    height: 65,
+    heightest: 82,
+    lowest: 65,
+    areaPoint: [
+      120.63907129640684, 24.168809936996578,
+      120.63787271983634, 24.166927133207043,
+      120.6396132829033, 24.165966733555752,
+      120.64065553501386, 24.1676403237521,
+    ],
+    cesiumItem: null,
+    active: false,
+    isPause: false,
+    cameraPosition: {
+      lon: 120.63787271983634,
+      lat: 24.126927133207043,
+      height: 800
+    },
+    src: "http://192.168.1.23/3dDemoProject_web/DommyImg/flooded3.jpg",
+  },
 }
 
 

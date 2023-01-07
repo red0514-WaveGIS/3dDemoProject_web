@@ -2,24 +2,10 @@
   <div>
     <div class="mapBox">
       <div id="cesiumContainer"></div>
-      <!-- <div id="wrapMap">
-        <div id="MarkerMap"></div>
-        <div id="popup" class="ol-popup">
-          <PopupInfo 
-            :popupContent="popupCol" 
-          ></PopupInfo>
-        </div>
-      </div> -->
       <div 
         class="d-flex control_plate"
         :style="positionStyle"
       >
-        <!-- <div class="collapse d-flex align-center">
-          <span 
-            @click="collapseFunc()" 
-            class="arrow-style pr-2 white--text"
-          >{{isShowMapTools === true ? "＞":"＜"}}</span>
-        </div> -->
         <div class="control_plate_bg mt-0 pt-0">
           <v-alert
             border="left"
@@ -30,8 +16,28 @@
           </v-alert>
           <div class="mx-4">
             <div class="cesium-style">
-              <h3 class="yellow lighten-5">Cesium 效果</h3>
+              <h3 class="yellow lighten-5">Cesium Tools</h3>
               <div class="mt-2">
+                <h4 class="mt-2">LayerPicker</h4>
+                <div class="mt-2">
+                  <v-radio-group v-model="layerGroup" class="mt-2">
+                    <v-radio
+                      v-for="layer in layerLists"
+                      color="cyan"
+                      :key="layer"
+                      :label="`${layer}`"
+                      :value="layer"
+                    >
+                      <template v-slot:label>
+                        <div>
+                          <v-icon>{{turnBackLayersIconFunc(layer)}}</v-icon> 
+                          <span class="pl-2">{{layer}}</span>
+                        </div>
+                      </template>
+                    </v-radio>
+                  </v-radio-group>
+                </div>
+                <v-divider></v-divider>
                 <h4 class="mt-2">Building Control</h4>
                 <div class="my-2 ">
                   <v-switch
@@ -91,26 +97,31 @@
                 </v-expansion-panels>
                 <v-divider></v-divider>
                 <h4 class="mt-2">Flooded Board</h4>
-                <div class="mt-2">
+                <div v-for="floodItem of floodedList" :key="floodItem.areaName" class="mt-2">
                   <v-switch
                     class="mt-0"
                     color="blue"
-                    v-model="switch3"
+                    v-model="floodItem.active"
                     :hide-details="true"
-                    :label="'大巨蛋淹水區域'"
-                    @change="showFloodedAreaFunc(switch3, 'big_egg')"
+                    :label="floodItem.areaName"
+                    @change="showFloodedAreaFunc(floodItem.active, floodItem.name)"
                   ></v-switch>
                   <div class="d-flex align-center my-2">
-                    <span class="mx-2">海拔：{{(+(floodedList['big_egg'].height)).toFixed(2)}} m</span>
-                    <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('big_egg')">
-                      <v-icon color="white">{{this.floodedList['big_egg'].isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
+                    <span class="mx-2">海拔：{{(+(floodItem.height)).toFixed(2)}} cm</span>
+                    <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc(floodItem.name)">
+                      <v-icon color="white">{{floodItem.isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
                     </v-btn>
-                    <v-btn class="ml-2" color="red" x-small dark fab @click="cameraFlyToFunc('big_egg')">
+                    <v-btn class="ml-2" color="red" x-small dark fab @click="cameraFlyToFunc(floodItem.name)">
                       <v-icon color="white">mdi-airplane-takeoff</v-icon>
                     </v-btn>
                   </div>
                 </div>
-                <div class="mt-2">
+
+
+
+
+
+                <!-- <div class="mt-2">
                   <v-switch
                     class="mt-0"
                     color="blue"
@@ -120,7 +131,7 @@
                     @change="showFloodedAreaFunc(switch4, 'memorial_hall')"
                   ></v-switch>
                   <div class="d-flex align-center my-2">
-                    <span class="mx-2">海拔：{{(+(floodedList['memorial_hall'].height)).toFixed(2)}} m</span>
+                    <span class="mx-2">海拔：{{(+(floodedList['memorial_hall'].height)).toFixed(2)}} cm</span>
                     <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('memorial_hall')">
                       <v-icon color="white">{{this.floodedList['memorial_hall'].isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
                     </v-btn>
@@ -128,7 +139,7 @@
                       <v-icon color="white">mdi-airplane-takeoff</v-icon>
                     </v-btn>
                   </div>
-                </div>
+                </div> -->
                 <v-divider></v-divider>
                 <h4 class="mt-2">Weather Simulation</h4>
                 <v-radio-group v-model="weatherGroup" class="mt-2">
@@ -148,31 +159,26 @@
                   </v-radio>
                 </v-radio-group>
                 <v-divider></v-divider>
-                <div class="my-4">
-                  <v-col cols="12">
-                    <div>
-                      <v-btn
-                        dark
-                        color="purple"
-                        @click="imgDailogIsOpen = true"
-                      >
-                        <v-icon color="white">mdi-water-off</v-icon>
-                        檢視淹水圖
-                      </v-btn>
-                    </div>
-                    <div>
-                      <small class="pink--text">*地圖中點擊右鍵獲取欲顯示淹水圖</small>
-                    </div>
-                  </v-col>
-                  <v-col cols="12">
-                    <v-btn
-                      color="teal" 
-                      @click="cameraFlyToFunc('origin')"
-                    >
-                      <span class="white--text">返回初始視角</span> 
+                <h4 class="mt-2">KML & Points</h4>
+                <div class="mt-2" v-for="el of importKmlList" :key="el.name">
+                  <div class="d-flex align-center my-2">
+                    <span class="mx-2">Name: {{ el.name }}</span>
+                    <v-btn class="ml-2" color="red" x-small dark fab @click="cameraFlyToFunc('kml', el.positions)">
+                      <v-icon color="white">mdi-airplane-takeoff</v-icon>
                     </v-btn>
-                  </v-col>
+                  </div>
                 </div>
+
+                <v-divider></v-divider>
+                <h4 class="mt-2">Functional Btn</h4>
+                <v-col cols="12">
+                  <v-btn
+                    color="teal" 
+                    @click="cameraFlyToFunc('origin')"
+                  >
+                    <span class="white--text">返回初始視角</span> 
+                  </v-btn>
+                </v-col>
               </div>
             </div>
           </div>
@@ -180,7 +186,7 @@
         <div class="collapse d-flex align-center">
           <span 
             @click="collapseFunc()" 
-            class="arrow-style pr-2 white--text"
+            class="arrow-style pl-2 white--text"
           >{{isShowMapTools === true ? "＜":"＞"}}</span>
         </div>
       </div>
@@ -217,9 +223,10 @@ export default {
   },
   mixins: [customApi, wgProj4, customCesium],
   data: () => ({
+    Cesium: null,
     originalPosition: {
-      lon: 121.556,
-      lat: 25.035,
+      lon: 120.639,
+      lat: 24.164,
       height: 800
     },
     map: {
@@ -245,7 +252,16 @@ export default {
       ol3d: "",
       scene: "",
     },
-    switch1: false,
+    importKmlList: [
+      {name: 'oneRoad', path: '../testkml/oneRoad.kml', positions: []},
+      {name: 'oneRoadTwo', path: '../testkml/oneRoadTwo.kml', positions: []},
+      {name: 'cyclingPath', path: '../testkml/cyclingPath.kml', positions: []},
+    ],
+    dummyPosition: {
+      longitude: 120.63907129640684, 
+      latitude: 24.168809936996578,
+      height: 100,
+    },
     buildingState: false,
     switch3: false,
     switch4: false,
@@ -257,6 +273,8 @@ export default {
     viewSwitch: true,
     weatherGroup: 'Cloudy',
     weatherLists: ['Cloudy', 'Rain', 'Fog', 'Snow'],
+    layerGroup: 'satelliteOnly',
+    layerLists: ['standardRoadMap', 'somehowAlteredRoadMap', 'hybrid', 'satelliteOnly', 'terrain'],
     showBuildingAreaState: {
       isSetBuilding: null,
       point: [0,0,0,0]
@@ -266,7 +284,6 @@ export default {
     leftLon: 0,
     rightLon: 0,
     cesiumViewer: null,
-    cesiumScene: null,
     isLoading: true,
     floodedList: null,
     test: 0,
@@ -283,22 +300,29 @@ export default {
   },
   mounted: async function() {
     await this.initOriginCesium()
+
+
+    // 加入ION導航
+    // this.addIonEntity(viewer)
+
     // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度
     this.setFeatureClickEvent(this.cesiumViewer)
-    
-    this.doRoadingFunc(5000)
 
-    // if (!this.checkMapIsExist(this.map.mapTargetId)) this.wrapInitMap()
-    // this.ol3dData = this.initCesium(this.map.mapTargetId)
-    // this.setFullScreenControl(this.map.mapTargetId)
-    // 開啟3D地圖
-    // this.viewSwitchFunc(true)
-    // this.addBuildingFunc(true)
+    // 打點
+    this.addPointFunc(this.cesiumViewer, this.dummyPosition)
+
+    // 匯入本地KML檔案(此檔案為KML檔)
+    for(let el of this.importKmlList) {
+      await this.addKmlFileFunc(this.cesiumViewer, el.path, el.name)
+    }
+
+    // 設定拖曳KML匯入地圖
+    this.setDragDropFunc(this.cesiumViewer)
+
+    this.doRoadingFunc(4000)
+    this.dummyFunction()
   },
   methods: {
-    viewSwitchFunc(state){
-      this.toggle3Dmap(this.ol3dData.ol3d, state)
-    },
     collapseFunc(){
       this.isShowMapTools = !this.isShowMapTools
       if(this.isShowMapTools) {
@@ -310,9 +334,10 @@ export default {
     async showFloodedAreaFunc(state, name){
       let item = this.floodedList[name]
       if(state) {
+        console.log(this.floodedList[name].cesiumItem)
         if(this.floodedList[name].cesiumItem === null) {
           this.isLoading = true
-          this.floodedList[name].cesiumItem = await this.addedFloodedPolygon(item, name)
+          this.floodedList[name].cesiumItem = await this.addedFloodedPolygon(this.cesiumViewer, item, name)
           this.isLoading = false
         } else {
           for(let entity of this.floodedList[name].cesiumItem._entities._array) {
@@ -364,22 +389,41 @@ export default {
       this.leftLon = 121.55796412314149
       this.rightLon = 121.56583135058975
     },
-    cameraFlyToFunc(type, buildingLocation){
+    cameraFlyToFunc(type, customLoaction){
       let position = ""
+      let heading = null
+      let pitch = null
+      let roll = null
       if(type === 'origin') {
         position = this.originalPosition
       } else if (type === 'building') {
-        position = buildingLocation
+        position = customLoaction
+      } else if (type === 'kml') {
+        // 世界座標轉換為經緯度 https://reurl.cc/gQykq7
+        let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
+        let cartesian3 = customLoaction[0]
+        let cartograhphic = ellipsoid.cartesianToCartographic(cartesian3)
+        let lon = this.Cesium.Math.toDegrees(cartograhphic .longitude)
+        let lat = this.Cesium.Math.toDegrees(cartograhphic.latitude)
+        // let height = cartograhphic.height
+        position = {
+          lon: lon,
+          lat: lat,
+          height: 2000
+        }
+        heading = 0
+        pitch = -90
+        roll = 0
       } else {
         position = this.floodedList[type].cameraPosition
       }
-      this.cameraFlyTo(this.cesiumScene, position)
+      this.cameraFlyTo(this.cesiumViewer.scene, position, heading, pitch, roll)
     },
     addBuildingFunc(){
       let state = this.buildingState
       if(state === true) {
         if(this.showBuildingAreaState.isSetBuilding === null) {
-          this.showBuildingAreaState.isSetBuilding = this.addBuilding()
+          this.showBuildingAreaState.isSetBuilding = this.addBuilding(this.cesiumViewer)
           this.doRoadingFunc(7000)
         } else {
           this.hideBuilding(this.showBuildingAreaState.isSetBuilding, state)
@@ -402,6 +446,27 @@ export default {
           break;
         case 'Fog':
           icon = 'mdi-weather-fog'
+          break;
+      }
+      return icon
+    },
+    turnBackLayersIconFunc(layer){
+      let icon = ""
+      switch (layer) {
+        case 'standardRoadMap':
+          icon = 'mdi-earth'
+          break;
+        case 'somehowAlteredRoadMap':
+          icon = 'mdi-earth-plus'
+          break;
+        case 'hybrid':
+          icon = 'mdi-google-earth'
+          break;
+        case 'satelliteOnly':
+          icon = 'mdi-earth-box'
+          break;
+        case 'terrain':
+          icon = 'mdi-terrain'
           break;
       }
       return icon
@@ -434,10 +499,14 @@ export default {
       this.changeCesiumSource(this.ol3dData.ol3d, this.mapRadio)
     },
     weatherGroup(){
-      this.removeWeather(this.cesiumScene)
+      this.removeWeather(this.cesiumViewer.scene)
       if(this.weatherGroup !== 'Cloudy') {
-        this.addWeather(this.cesiumScene, weather[this.weatherGroup], this.weatherGroup)
+        this.addWeather(this.cesiumViewer.scene, weather[this.weatherGroup], this.weatherGroup)
       }
+    },
+    layerGroup(){
+      this.doRoadingFunc(4000)
+      this.changeLayersFunc(this.cesiumViewer, this.layerGroup)
     }
   }
 }

@@ -1,134 +1,133 @@
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf'
 import { setTimeout } from 'core-js';
+// import buildingNum from '@/assets/nlscDada';
 
 
 export default {
   data: () => ({
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNTFkYWFlNi03NmJkLTQ4NTYtYTdmZC01ZWFiMmYyN2UwNzYiLCJpZCI6MTE0NzQ5LCJpYXQiOjE2NjgzOTQ2OTh9.CpaV1PVZonfT71zS8iIkv5lzU8mEmDspL4GVEKj8qy8',
+    // red' s cesium ION
+    // token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNTFkYWFlNi03NmJkLTQ4NTYtYTdmZC01ZWFiMmYyN2UwNzYiLCJpZCI6MTE0NzQ5LCJpYXQiOjE2NjgzOTQ2OTh9.CpaV1PVZonfT71zS8iIkv5lzU8mEmDspL4GVEKj8qy8',
+    // token 資料來源 https://ruralgis.tari.gov.tw/Rural3D/cesium.html
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNzgwZTEyYy1kZmY4LTQ1YzItYmNiYi02NTAyY2RhZThlYTUiLCJpZCI6NzcwOSwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU5MjQ1MjQ2MH0.8u2-_RDVWD2Ne_11zQ07wA_gyCMUB50bcRKTmd9szEY',
     cesiumBaseSources: {
       standardRoadMap: new Cesium.UrlTemplateImageryProvider({
         url : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
         credit : 'standardRoadMap',
+        name: 'Google標準地圖',
+      }),
+      somehowAlteredRoadMap: new Cesium.UrlTemplateImageryProvider({
+        url : 'https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
+        credit : 'somehowAlteredRoadMap',
+        name: 'Google標準地圖2',
       }),
       hybrid: new Cesium.UrlTemplateImageryProvider({
         url : 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
         credit : 'hybrid',
+        name: 'Google衛星地圖',
       }),
       satelliteOnly: new Cesium.UrlTemplateImageryProvider({
         url : 'https://mt1.google.com/vt/lyrs=s&hl=pl&&x={x}&y={y}&z={z}',
         credit : 'satelliteOnly',
+        name: 'Google純衛星地圖'
+      }),
+      terrain: new Cesium.UrlTemplateImageryProvider({
+        url : 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+        credit : 'terrain',
+        name: 'Google等高線地圖'
       })
     },
-    importKmlList: [
-      {name: 'oneRoad', path: '../testkml/oneRoad.kml', positions: []},
-      {name: 'oneRoadTwo', path: '../testkml/oneRoadTwo.kml', positions: []},
-      {name: 'cyclingPath', path: '../testkml/cyclingPath.kml', positions: []},
-    ],
-    // baseSources: {
-    //   standardRoadMap: { cName: "Google標準地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   somehowAlteredRoadMap: { cName: "Google標準地圖2", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   hybrid: { cName: "Google衛星地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   satelliteOnly: { cName: "Google純衛星地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=s&hl=pl&&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   terrain: { cName: "Google等高線地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   terrainOnly: { cName: "Google純等高線地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=t&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   roadsOnly: { cName: "Google道路地圖", source: new XYZ({ url: "https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}", crossOrigin: "anonymous" }) },
-    //   osm: { cName: "OpenStreetMap開放街圖地圖", source: new OSM() },
-    //   TGOSMAP_W: { cName: "TGOS電子地圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=TGOSMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    //   NLSCMAP_W: { cName: "通用版電子地圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=NLSCMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    //   F2IMAGE_W: { cName: "福衛二號影像", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=F2IMAGE_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    //   ROADMAP_W: { cName: "福衛二號混合圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=ROADMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    //   HILLSHADEMIX_W: { cName: "地形暈渲混合圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=HILLSHADEMIX_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    //   HILLSHADE_W: { cName: "地形暈渲圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=HILLSHADE_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    //   MOTCMAP_W: { cName: "路網數值圖", source: new XYZ({ url: "https://gis.sinica.edu.tw/tgos/file-exists.php?img=MOTCMAP_W-png-{z}-{x}-{y}", crossOrigin: "anonymous" }) },
-    // },
   }),
   methods: {
     async initOriginCesium () {
+      // Browser 相關 initialize 設定
       document.oncontextmenu = new Function("return false")
-
       window.CESIUM_BASE_URL = './'
       window['Cesium'] = Cesium
-      Cesium.Ion.defaultAccessToken = this.token
-      let terrainModels = Cesium.createWorldTerrain({
-        requestVertexNormals : true
-      })
-      // let terrainModels = new Cesium.ArcGISTiledElevationTerrainProvider({
-      //   url: 'https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer',
-      // })
-      // let terrainModels = new Cesium.CesiumTerrainProvider({
-      //   url: 'http://data.marsgis.cn/terrain',
-      // })
-
-      const viewer = new Cesium.Viewer('cesiumContainer', {
-        imageryProvider: new Cesium.UrlTemplateImageryProvider({
-          url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
-        }),
-        terrainProvider: terrainModels
-      })
-
-      // this.setTimer(viewer)
-      this.hideTimer(viewer)
       
+      // Cesium 相關設定
+      Cesium.Ion.defaultAccessToken = this.token // 帶入token
+      
+      //加入地形
+      // let terrainModels = Cesium.createWorldTerrain({
+      //   requestVertexNormals : true
+      // })
 
+      // 資料來源 https://ruralgis.tari.gov.tw/Rural3D/cesium.html
+      let terrainModels = new Cesium.CesiumTerrainProvider({
+          url : Cesium.IonResource.fromAssetId(19738),
+          requestVertexNormals : true,
+      })
+      console.log(terrainModels)
+      // Cesium' s Instance initialize 設定
+      const viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider: this.cesiumBaseSources["satelliteOnly"], // 加入地圖影像
+        terrainProvider: terrainModels, // 加入地圖地形
+        baseLayerPicker: false, // 隱藏 default 圖層選擇器
+        navigationHelpButton: false, // 隱藏 default 導覽按鈕
+        shouldAnimate: true,
+      })
+
+      // Viewer相關設定
       // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
       viewer.infoBox.frame.removeAttribute("sandbox")
       viewer.infoBox.frame.src = "about:blank"
-      viewer.scene.globe.depthTestAgainstTerrain = true
+      this.hideTimer(viewer)
 
+      // Viewer.scene
+      viewer.scene.globe.depthTestAgainstTerrain = true 
+      viewer.scene.globe.baseColor = Cesium.Color.TEAL // 改變球體底部顏色
+      // viewer.scene.skyAtmosphere.show = false // 隱藏大氣層
       // viewer.scene.faxx = true;
       // viewer.scene.postProcessStages.fxaa.enabled = true;
-
-      // viewer._cesiumWidget._creditContainer.style.display = "none";
-      // viewer.scene.globe.show = true;
       // viewer.scene.debugShowFramesPerSecond = true;
 
+      // 加載並完成所有 initialize 後， 附值給全域使用
+      this.Cesium = Cesium
       this.cesiumViewer = viewer
-      this.cesiumScene = viewer.scene
-
-      for(let el of this.importKmlList) {
-        await this.addKmlFileFunc(viewer, el.path, el.name)
-      }
-
-      // this.addIonEntity(viewer)
-
-      this.clampToGround(viewer)
-
-      this.cameraFlyTo(viewer.scene, this.originalPosition)
+      
+      // Set initial position
+      this.cameraFlyTo(viewer, this.originalPosition)
     },
     async addIonEntity(viewer){
       const positionProperty = new Cesium.SampledPositionProperty()
       const timeSpan = 30
-      const totalSeconds = timeSpan * (this.importKmlList[2].positions.length - 1);
-      const start = Cesium.JulianDate.fromIso8601("2022-12-04T21:10:00Z");
-      const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate());
+      const totalSeconds = timeSpan * (this.importKmlList[2].positions.length - 1)
+      const start = Cesium.JulianDate.fromIso8601("2022-12-04T21:10:00Z")
+      const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate())
       
-      viewer.clock.startTime = start.clone();
-      viewer.clock.stopTime = stop.clone();
-      viewer.clock.currentTime = start.clone();
-      viewer.timeline.zoomTo(start, stop);
-      viewer.clock.multiplier = 50;
-      viewer.clock.shouldAnimate = true;
+      viewer.clock.startTime = start.clone()
+      viewer.clock.stopTime = stop.clone()
+      viewer.clock.currentTime = start.clone()
+      viewer.timeline.zoomTo(start, stop)
+      viewer.clock.multiplier = 50
+      viewer.clock.shouldAnimate = true
 
       this.importKmlList[2].positions.forEach((position,index)=>{
-        const time = Cesium.JulianDate.addSeconds(start, index * timeSpan, new Cesium.JulianDate());
+        const time = Cesium.JulianDate.addSeconds(start, index * timeSpan, new Cesium.JulianDate())
         positionProperty.addSample(time, position)
       })
-      // const airplaneUri = await Cesium.IonResource.fromAssetId(1404326)
+
       const airplaneUri = '../ionModule/CesiumMilkTruck.glb'
       const airplaneEntity = {
-        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({ start: start, stop: stop })]),
+        availability: new Cesium.TimeIntervalCollection([
+          new Cesium.TimeInterval({ 
+            start: start, 
+            stop: stop 
+          })
+        ]),
         position: positionProperty,
-        model: { uri: airplaneUri },
+        model: { 
+          uri: airplaneUri,
+        },
         orientation: new Cesium.VelocityOrientationProperty(positionProperty),
         path: new Cesium.PathGraphics({ width: 5 }),
       }
-      console.log(airplaneEntity)
-      // viewer.entities.add(airplaneEntity)
+      viewer.entities.add(airplaneEntity)
 
       // viewer.trackedEntity = airplaneEntity
     },
-    clampToGround(viewer){
+    setDragDropFunc(viewer){
       viewer.extend(Cesium.viewerDragDropMixin, {
         clearOnDrop: true,
         flyToOnDrop: true,
@@ -167,9 +166,6 @@ export default {
         }
         viewer.dataSources.add(kmlData)
       })
-      .finally(()=>{
-        console.log(viewer.dataSources)
-      })
     },
     setFeatureClickEvent(viewer){
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
@@ -178,6 +174,7 @@ export default {
           show : false
         }
       })
+
       let ellipsoid = viewer.scene.globe.ellipsoid
       let longitudeString = null
       let latitudeString = null
@@ -185,6 +182,7 @@ export default {
       let cartesian = null
       let currentThis = this
 
+      // Set right click event
       handler.setInputAction(function(movement) {
         cartesian = viewer.camera.pickEllipsoid(movement.position, ellipsoid)
         if (cartesian) {
@@ -220,57 +218,49 @@ export default {
         }else {
           entity.label.show = false;
         }
-      }, Cesium.ScreenSpaceEventType.RIGHT_CLICK) // MOUSE_MOVE
+      }, Cesium.ScreenSpaceEventType.RIGHT_CLICK) // Right click
 
+      // Set scroll wheel event
       handler.setInputAction(function(wheelment) {
         height = Math.ceil(viewer.camera.positionCartographic.height)
         entity.position = cartesian
         entity.label.show = false
         entity.label.text = `${longitudeString}, ${latitudeString}, ${height}, ${wheelment}`
-      }, Cesium.ScreenSpaceEventType.WHEEL)
+      }, Cesium.ScreenSpaceEventType.WHEEL) // scroll wheel
     },
-    changeCesiumSource(ol3d, newSourceName){
-      ol3d.getCesiumScene().imageryLayers._layers = ol3d.getCesiumScene().imageryLayers._layers.map(el=> {
-        if(el._imageryProvider._credit === undefined) {
-          el.name = null
-          return el
-        } else {
-          el.name = el._imageryProvider._credit._html
-          return el
-        }
-      })
-      if(ol3d.getCesiumScene().imageryLayers._layers.length === 2) {
-        ol3d.getCesiumScene().imageryLayers.addImageryProvider(this.cesiumBaseSources[newSourceName])
-        ol3d.getCesiumScene().imageryLayers._layers[2].name = newSourceName
-      }
-      ol3d.getCesiumScene().imageryLayers._layers.forEach(el=> el.show = false )
-      let has = ol3d.getCesiumScene().imageryLayers._layers.map(el=> el.name).indexOf(newSourceName)
+    addBuilding(viewer){
+      // 引入內政部國土測繪中心 三維建物服務 (以台北市為例)
+      // await fetch(`/api/3dtiles/building/tiles3d/${buildingNum["臺北市"].num}/tileset.json`)
+      // .then(response => response.json())
+      // .then(data=>{
+      //   console.log(data)
+      // })
+      // .catch(err=>{
+      //   console.log(err)
+      // })
 
-      if(has !== -1) {
-        ol3d.getCesiumScene().imageryLayers._layers[has].show = true
-      } else {
-        ol3d.getCesiumScene().imageryLayers.addImageryProvider(this.cesiumBaseSources[newSourceName])
-      }
-    },
-    toggle3Dmap(ol3d, state){
-      ol3d.setEnabled(state)
-    },
-    addBuilding(){
+      // let sceneBuilding
+
+      // let sceneBuilding = viewer.scene.primitives.add(
+      //   new Cesium.Cesium3DTileset({
+      //     url: `/api/3dtiles/building/tiles3d/${buildingNum["臺北市"].num}/tileset.json`,
+      //   })
+      // )
+
       const osmBuildingsTileset = Cesium.createOsmBuildings({
         style: new Cesium.Cesium3DTileStyle({
           color : {
             conditions : [
-              ["${feature['addr:city']} === '臺北市'", "color('#13293D')"],
+              ["${feature['building']} === 'stadium'", "color('#FF007F')"],
+              ["${feature['building']} === 'university'", "color('#F8FF75')"],
               ['true', 'color("white", 1.0)']
             ]
           },
           show: null,
         }),
       })
-      // console.log(osmBuildingsTileset)
-      let sceneBuilding = this.cesiumScene.primitives.add(osmBuildingsTileset)
-
-      // const sceneBuilding = scene.primitives.add(osmBuildingsTileset)
+      console.log(osmBuildingsTileset)
+      let sceneBuilding = viewer.scene.primitives.add(osmBuildingsTileset)
       return sceneBuilding
     },
     adjustShowBuildingArea(sceneBuilding){
@@ -308,7 +298,7 @@ export default {
     hideBuilding(building, state){
       building.show = state
     },
-    async addedFloodedPolygon(item,name) {
+    async addedFloodedPolygon(viewer,item,name) {
       // 淹水區域座標
       let floodedAreaPoint = item.areaPoint
       let {highest, lowest}= await this.getHeighestLowest(floodedAreaPoint)
@@ -368,8 +358,8 @@ export default {
             </div>
           `
       }
-      this.cesiumViewer.entities.add(entity)
-      return this.cesiumViewer.entities
+      viewer.entities.add(entity)
+      return viewer.entities
     },
     async getHeighestLowest(floodedAreaPoint){
       let firstPoint = [floodedAreaPoint[0],floodedAreaPoint[1]]
@@ -420,21 +410,6 @@ export default {
         highest, lowest
       }
     },
-    addPoint(ol3d){
-      // 點位座標
-      let floodedAreaPoint = [
-        121.5579520324756,25.04493581866319,
-      ]
-      // 加入點位
-      let entity = {
-        position: Cesium.Cartesian3.fromDegrees(floodedAreaPoint),
-        billboard: {
-          image: "@/assets/gis/speed_normal.png",
-        },
-      }
-      console.log(entity)
-      ol3d.getDataSourceDisplay().defaultDataSource.entities.add(entity)
-    },
     addWeather(scene, weather, name){
       scene.postProcessStages.add(new Cesium.PostProcessStage({
         name: name,
@@ -444,54 +419,69 @@ export default {
     removeWeather(scene){
       scene.postProcessStages.removeAll();
     },
-    cameraFlyTo(scene, position){
+    changeLayersFunc(viewer, layerName){
+      let layers = viewer.imageryLayers
+      let baseLayer = layers.get(0)
+      layers.remove(baseLayer)
+      layers.addImageryProvider(this.cesiumBaseSources[layerName])
+    },
+    cameraFlyTo(scene, position, headings, pitchs, rolls){
+      let heading = headings === null || headings === undefined ? 0 : headings
+      let pitch = pitchs === null || pitchs === undefined ? -45 : pitchs
+      let roll = rolls === null || rolls === undefined ? 0 : rolls
+
       scene.camera.flyTo({
           destination : Cesium.Cartesian3.fromDegrees(position.lon, position.lat, position.height),
           orientation : {
-          heading : Cesium.Math.toRadians(10),
-          pitch : Cesium.Math.toRadians(-45),
+          heading : Cesium.Math.toRadians(heading), // up down
+          pitch : Cesium.Math.toRadians(pitch), // left right
+          roll: Cesium.Math.toRadians(roll), // left right
         }
-      });
+      })
     },
     hideTimer(viewer) {
       viewer.animation.container.style.visibility = 'hidden'
       viewer.timeline.container.style.visibility = 'hidden'
-      viewer.forceResize();
+      viewer.forceResize()
     },
-    setTimer(){
-      // viewer.animation.viewModel.dateFormatter = DateTimeFormatter;
-      // viewer.animation.viewModel.timeFormatter = TimeFormatter; 
-      // viewer.timeline.makeLabel = DateTimeFormatter;
-      // function TimeFormatter (time, viewModel) {
-      //   return this.DateTimeFormatter(time, viewModel, true);
-      // } 
-      // function  DateTimeFormatter(datetime, viewModel, ignoredate) {
-      //   var julianDT = new Cesium.JulianDate();
-      //   Cesium.JulianDate.addHours(datetime, 8, julianDT);
-      //   var gregorianDT = Cesium.JulianDate.toGregorianDate(julianDT);
-      //   var objDT;
-      //   if (ignoredate){
-      //     objDT = '';
-      //   }else {
-      //     objDT = new Date(gregorianDT.year, gregorianDT.month - 1, gregorianDT.day);
-      //     objDT = gregorianDT.year + '年' + objDT.toLocaleString('zh-cn', { month: 'short' }) + gregorianDT.day + '日';
-      //     if (viewModel || gregorianDT.hour + gregorianDT.minute === 0){
-      //       return objDT 
-      //       objDT += '';
-      //     }
-      //   }
-      //   return objDT + Cesium.sprintf('%02d:%02d:%02d', gregorianDT.hour, gregorianDT.minute, gregorianDT.second);
-      // }
+    addPointFunc(viewer, positionData){
+      const points = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
+      points.add({
+        position : Cesium.Cartesian3.fromDegrees(
+          positionData.longitude, 
+          positionData.latitude, 
+          positionData.height
+        ),
+        color : Cesium.Color.YELLOW
+      })
     },
-    changeGoogleMap(viewer){
-      let osm = new Cesium.OpenStreetMapImageryProvider(
-        "https://b.tile.openstreetmap.org/'"
-      )
+    dummyFunction() {
 
-      console.log(osm)
-      console.log(viewer)
-      viewer.imageryLayers.addImageryProvider(osm);
-      console.log(viewer.imageryLayers)
+      console.log('Here is a dummy area for test.')
+      
+      
+      
+    //   ------------------------------H----------
+    //   |  CAR        E                          | 
+    //   |                                        |
+    //   |                                        |
+    //   |                                        |--------------------------|
+    //   |                                        |              E           |
+    //   |                                        |                          |
+    //   |                                        |                          |
+    //   |                                        工                         |                                  
+    //      CAR                                   |                          |
+    //      CAR                                   |                          |
+    //                                            ---------------------------|
+    //   |                                       |
+    //   |              E                        |
+    //   -----------------------------------H----|
+
+
+
+
+
+
     }
   },
 }
