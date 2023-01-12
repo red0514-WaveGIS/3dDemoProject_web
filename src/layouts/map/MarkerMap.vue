@@ -116,30 +116,6 @@
                     </v-btn>
                   </div>
                 </div>
-
-
-
-
-
-                <!-- <div class="mt-2">
-                  <v-switch
-                    class="mt-0"
-                    color="blue"
-                    v-model="switch4"
-                    :hide-details="true"
-                    :label="'中正紀念堂淹水區域'"
-                    @change="showFloodedAreaFunc(switch4, 'memorial_hall')"
-                  ></v-switch>
-                  <div class="d-flex align-center my-2">
-                    <span class="mx-2">海拔：{{(+(floodedList['memorial_hall'].height)).toFixed(2)}} cm</span>
-                    <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc('memorial_hall')">
-                      <v-icon color="white">{{this.floodedList['memorial_hall'].isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
-                    </v-btn>
-                    <v-btn class="ml-2" color="red" x-small dark fab  @click="cameraFlyToFunc('memorial_hall')">
-                      <v-icon color="white">mdi-airplane-takeoff</v-icon>
-                    </v-btn>
-                  </div>
-                </div> -->
                 <v-divider></v-divider>
                 <h4 class="mt-2">Weather Simulation</h4>
                 <v-radio-group v-model="weatherGroup" class="mt-2">
@@ -260,7 +236,7 @@ export default {
     dummyPosition: {
       longitude: 120.63907129640684, 
       latitude: 24.168809936996578,
-      height: 100,
+      height: 200,
     },
     buildingState: false,
     switch3: false,
@@ -320,7 +296,6 @@ export default {
     this.setDragDropFunc(this.cesiumViewer)
 
     this.doRoadingFunc(4000)
-    this.dummyFunction()
   },
   methods: {
     collapseFunc(){

@@ -7,9 +7,7 @@ import { setTimeout } from 'core-js';
 export default {
   data: () => ({
     // red' s cesium ION
-    // token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNTFkYWFlNi03NmJkLTQ4NTYtYTdmZC01ZWFiMmYyN2UwNzYiLCJpZCI6MTE0NzQ5LCJpYXQiOjE2NjgzOTQ2OTh9.CpaV1PVZonfT71zS8iIkv5lzU8mEmDspL4GVEKj8qy8',
-    // token 資料來源 https://ruralgis.tari.gov.tw/Rural3D/cesium.html
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNzgwZTEyYy1kZmY4LTQ1YzItYmNiYi02NTAyY2RhZThlYTUiLCJpZCI6NzcwOSwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU5MjQ1MjQ2MH0.8u2-_RDVWD2Ne_11zQ07wA_gyCMUB50bcRKTmd9szEY',
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNTFkYWFlNi03NmJkLTQ4NTYtYTdmZC01ZWFiMmYyN2UwNzYiLCJpZCI6MTE0NzQ5LCJpYXQiOjE2NjgzOTQ2OTh9.CpaV1PVZonfT71zS8iIkv5lzU8mEmDspL4GVEKj8qy8',
     cesiumBaseSources: {
       standardRoadMap: new Cesium.UrlTemplateImageryProvider({
         url : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
@@ -53,10 +51,11 @@ export default {
       //   requestVertexNormals : true
       // })
 
-      // 資料來源 https://ruralgis.tari.gov.tw/Rural3D/cesium.html
+      // 資料來源 2022年版全臺灣及部分離島20公尺網格數值地形模型DTM資料 https://data.gov.tw/dataset/160361
+      // 內部 1485763 (金門), 1485755(全部)
       let terrainModels = new Cesium.CesiumTerrainProvider({
-          url : Cesium.IonResource.fromAssetId(19738),
-          requestVertexNormals : true,
+        url : Cesium.IonResource.fromAssetId(1485755),
+        requestVertexNormals : true,
       })
       console.log(terrainModels)
       // Cesium' s Instance initialize 設定
@@ -222,10 +221,8 @@ export default {
 
       // Set scroll wheel event
       handler.setInputAction(function(wheelment) {
-        height = Math.ceil(viewer.camera.positionCartographic.height)
-        entity.position = cartesian
-        entity.label.show = false
-        entity.label.text = `${longitudeString}, ${latitudeString}, ${height}, ${wheelment}`
+        console.log(wheelment)
+
       }, Cesium.ScreenSpaceEventType.WHEEL) // scroll wheel
     },
     addBuilding(viewer){
@@ -316,11 +313,13 @@ export default {
               if(item.height > item.heightest) {
                 isPause = false
               }
+              currentThis.weatherGroup = "Rain"
               item.height += 0.05
             } else {
               if(item.height < item.lowest) {
                 isPause = true
               }
+              currentThis.weatherGroup = "Cloudy"
               item.height -= 0.05
             }
             currentThis.floodedList[name].height = item.height
@@ -454,34 +453,6 @@ export default {
         ),
         color : Cesium.Color.YELLOW
       })
-    },
-    dummyFunction() {
-
-      console.log('Here is a dummy area for test.')
-      
-      
-      
-    //   ------------------------------H----------
-    //   |  CAR        E                          | 
-    //   |                                        |
-    //   |                                        |
-    //   |                                        |--------------------------|
-    //   |                                        |              E           |
-    //   |                                        |                          |
-    //   |                                        |                          |
-    //   |                                        工                         |                                  
-    //      CAR                                   |                          |
-    //      CAR                                   |                          |
-    //                                            ---------------------------|
-    //   |                                       |
-    //   |              E                        |
-    //   -----------------------------------H----|
-
-
-
-
-
-
     }
   },
 }

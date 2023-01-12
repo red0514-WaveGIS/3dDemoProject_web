@@ -49,6 +49,14 @@ module.exports = {
           "^/api/floodedMap/": ""
         }
       },
+      // "/api/climateGan/": {
+      //   target: "http://192.168.1.142:5030/floodimages",
+      //   ws: false,
+      //   changeOrigin: true,
+      //   pathRewrite: {
+      //     "^/api/climateGan/": ""
+      //   }
+      // },
       "/api/3dtiles/": {
         target: "https://3dtiles.nlsc.gov.tw/",
         ws: false,
