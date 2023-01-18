@@ -450,7 +450,7 @@ export default {
       viewer.entities.add(entity)
       
       // 加入flag標示點擊位置
-      let url = '../ionModule/flag.glb'
+      let url = "/api/3dproject/ionModule/flag.glb"
       let ionEntity = {
         id: lonlat + 1,
         position: cartesian3,
@@ -557,9 +557,9 @@ export default {
     async addPointFunc(viewer, item){
       let st_name = item.st_name
       let st_no = item.st_no
-      let src = '../icons/rain_normal.png'
+      let src = "/api/3dproject/icons/rain_normal.png"
       if(item.status !== "正常") {
-        src = '../icons/raw_alert1.png'
+        src = "/api/3dproject/icons/raw_alert1.png"
       }
 
       // 經緯度轉換

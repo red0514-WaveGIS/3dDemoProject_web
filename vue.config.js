@@ -73,6 +73,14 @@ module.exports = {
           "^/api/javaapi/": ""
         }
       },
+      "/api/3dproject/": {
+        target: "http://192.168.1.23/3dDemoProject_web/",
+        ws: false,
+        changeOrigin: true,
+        pathRewrite: {
+          "^/api/3dproject/": ""
+        }
+      },
     }
   },
   pluginOptions: {
