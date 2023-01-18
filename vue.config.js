@@ -65,6 +65,14 @@ module.exports = {
           "^/api/3dtiles/": ""
         }
       },
+      "/api/javaapi/": {
+        target: "http://52.187.182.187/",
+        ws: false,
+        changeOrigin: true,
+        pathRewrite: {
+          "^/api/javaapi/": ""
+        }
+      },
     }
   },
   pluginOptions: {

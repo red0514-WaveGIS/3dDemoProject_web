@@ -220,10 +220,37 @@ export default {
       }, Cesium.ScreenSpaceEventType.RIGHT_CLICK) // Right click
 
       // Set scroll wheel event
-      handler.setInputAction(function(wheelment) {
-        console.log(wheelment)
-
+      handler.setInputAction(async function() {
+        // console.log(wheelment)
+        
       }, Cesium.ScreenSpaceEventType.WHEEL) // scroll wheel
+
+      // Set left click event
+      handler.setInputAction(function(movement) {
+        if(currentThis.floodedSimulation) {
+          let ray = viewer.camera.getPickRay(movement.position)
+          let cartesian3 = viewer.scene.globe.pick(ray, viewer.scene)
+
+          let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
+          let lon = Cesium.Math.toDegrees(cartographic.longitude)
+          let lat = Cesium.Math.toDegrees(cartographic.latitude)
+          let geoDetail = {
+            lon: lon,
+            lat: lat,
+            height: cartographic.height,
+          }
+          
+          // 獲取中心點向外擴4點
+          let pointAroundSquare = currentThis.getBoundingBox(lat, lon, 100)    
+          for(let el of currentThis.floodedBoxes) {
+            viewer.entities.removeById(el.id)
+          }
+          let entity = currentThis.addedFloodedPolygonWithLatLon(viewer, pointAroundSquare, geoDetail)
+          currentThis.floodedBoxes = []
+          currentThis.floodedBoxes.push(entity.flooded)
+          currentThis.floodedBoxes.push(entity.flag)
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK) // left click
     },
     addBuilding(viewer){
       // 引入內政部國土測繪中心 三維建物服務 (以台北市為例)
@@ -256,7 +283,6 @@ export default {
           show: null,
         }),
       })
-      console.log(osmBuildingsTileset)
       let sceneBuilding = viewer.scene.primitives.add(osmBuildingsTileset)
       return sceneBuilding
     },
@@ -298,7 +324,7 @@ export default {
     async addedFloodedPolygon(viewer,item,name) {
       // 淹水區域座標
       let floodedAreaPoint = item.areaPoint
-      let {highest, lowest}= await this.getHeighestLowest(floodedAreaPoint)
+      let {highest, lowest}= await this.getHeighestLowestWithTurf(floodedAreaPoint)
       // 加入動態高度
       let height = 0
       let isActive = item.active
@@ -360,7 +386,92 @@ export default {
       viewer.entities.add(entity)
       return viewer.entities
     },
-    async getHeighestLowest(floodedAreaPoint){
+    addedFloodedPolygonWithLatLon(viewer, floodedAreaPoint, geoDetail){
+      let heights = geoDetail.height
+      let heightest = heights + 5
+      let lowest = heights - 2
+      let value = lowest
+      let increase = false
+      let lonlat = geoDetail.lon + geoDetail.lat
+      let cartesian3 = Cesium.Cartesian3.fromDegrees(geoDetail.lon, geoDetail.lat)
+      let currentThis = this
+      let height = new Cesium.CallbackProperty(function () {
+        if(increase) {
+          value += 0.05
+          if(value >= heightest) {
+            // alert('達點位上升5m水位')
+            increase = false
+          }
+        } else {
+          value -= 0.05
+          if(value <= lowest) {
+            increase = true
+          }
+        }
+        currentThis.targetFloodedHeight = value.toFixed(2)
+        return value
+      }, false)
+      let areaName = `${geoDetail.lon.toFixed(2)}, ${geoDetail.lat.toFixed(2)}, ${geoDetail.height.toFixed(2)}`
+      // 加入淹水區域
+      let materialType = Cesium.Color.DEEPSKYBLUE.withAlpha(0.7)
+      let entity = {
+          id: lonlat,
+          name: areaName,
+          position: cartesian3,
+          label: {
+            text: areaName,
+            font: '16px sans-serif', // 字體大小
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE, // 字體樣式
+            fillColor: new Cesium.Color.fromCssColorString("#D8637D"), // 字體填充色
+            outlineWidth: 2,  // 字體外圍線寬度（同樣也有顏色可設置）
+            outlineColor: new Cesium.Color.fromCssColorString("#000000"),
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // 垂直位置
+            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            pixelOffset: new Cesium.Cartesian2(0, 30),  // 中心位置
+            disableDepthTestDistance: Number.POSITIVE_INFINITY // 被遮擋是否可見（也就是將這個Entity在場景中至頂）
+          },
+          polygon : {
+            id: lonlat,
+            hierarchy: Cesium.Cartesian3.fromDegreesArray(floodedAreaPoint),
+            extrudedHeight: height, 
+            material: materialType,
+            closeTop: true,
+            closeBottom: true,
+            outline: true,
+            outlineColor: materialType,
+          },
+          description: `
+            <div style="padding: 10px; height:400px;">
+              <h3 style="color:red">經緯度：${areaName}<h3>
+            </div>
+          `
+      }
+      viewer.entities.add(entity)
+      
+      // 加入flag標示點擊位置
+      let url = '../ionModule/flag.glb'
+      let ionEntity = {
+        id: lonlat + 1,
+        position: cartesian3,
+        model: { 
+          uri: url,
+          scale : 5, // 旗幟高度5公尺
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // 垂直位置
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          pixelOffset: new Cesium.Cartesian2(0, 15),  // 中心位置
+          disableDepthTestDistance: Number.POSITIVE_INFINITY // 被遮擋是否可見（也就是將這個Entity在場景中至頂）
+        },
+      }
+
+      viewer.entities.add(ionEntity)
+      return {
+        flooded: entity,
+        flag: ionEntity
+      }
+    },
+    async getHeighestLowestWithTurf(floodedAreaPoint){
       let firstPoint = [floodedAreaPoint[0],floodedAreaPoint[1]]
       let twoSeatTemp = []
       let realSourcePoint = []
@@ -443,16 +554,160 @@ export default {
       viewer.timeline.container.style.visibility = 'hidden'
       viewer.forceResize()
     },
-    addPointFunc(viewer, positionData){
-      const points = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
-      points.add({
-        position : Cesium.Cartesian3.fromDegrees(
-          positionData.longitude, 
-          positionData.latitude, 
-          positionData.height
-        ),
-        color : Cesium.Color.YELLOW
-      })
+    async addPointFunc(viewer, item){
+      let st_name = item.st_name
+      let st_no = item.st_no
+      let src = '../icons/rain_normal.png'
+      if(item.status !== "正常") {
+        src = '../icons/raw_alert1.png'
+      }
+
+      // 經緯度轉換
+      let lon = item.lon
+      let lat = item.lat
+      let cartesian3 = Cesium.Cartesian3.fromDegrees(lon, lat)
+      let height = 0
+      height = await this.getTerrainHeigh(cartesian3, height)
+      const billboard = {
+        id: st_no, // id
+        position: cartesian3, // 位置
+        label: {
+          text: st_name, // 站名
+          font: '16px sans-serif', // 字體大小
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE, // 字體樣式
+          fillColor: new Cesium.Color.fromCssColorString("#FFFF00"), // 字體填充色
+          outlineWidth: 2,  // 字體外圍線寬度（同樣也有顏色可設置）
+          outlineColor: new Cesium.Color.fromCssColorString("#ffffff"),
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // 垂直位置
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          pixelOffset: new Cesium.Cartesian2(0, 15),  // 中心位置
+          disableDepthTestDistance: Number.POSITIVE_INFINITY // 被遮擋是否可見（也就是將這個Entity在場景中至頂）
+        },
+        billboard: {
+          id: st_no,
+          image: src,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY // 被遮擋是否可見（也就是將這個Entity在場景中至頂）
+        },
+        // items屬性資料
+        description: `
+          <table border="1" padding="0" align="center" bordercolor="#000000" width="100%" bgcolor="#FFFFFF">
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">站名</font>
+              </td>
+              <td>
+                <font color="black">${st_name}</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+              <font color="black">設備類型</font>
+              </td>
+              <td>
+                <font color="black">${item.device_type}</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">海平面高度</font>
+              </td>
+              <td>
+                <font color="black">${height}</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">經緯度</font>
+              </td>
+              <td>
+                <font color="black">(${lon}, ${lat})</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">時間</font>
+              </td>
+              <td>
+                <font color="black">${item.datatime}</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">電量</font>
+              </td>
+              <td>
+                <font color="black">${item.batteryvol}</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">即時水位</font>
+              </td>
+              <td>
+                <font color="black">${item.water_inner}</font>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="#BECBD3" align="center" width="100px">
+                <font color="black">狀態</font>
+              </td>
+              <td>
+                <font color="black">${item.status}</font>
+              </td>
+            </tr>
+          </table>
+        `
+      }
+      viewer.entities.add(billboard)
+    },
+    async getTerrainHeigh(cartesian3, height){
+      let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
+      let cesiumSamplePoints = []
+      let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
+
+      cesiumSamplePoints.push(cartographic); // lon lat
+      let promise = await Cesium.sampleTerrainMostDetailed(
+        this.cesiumViewer.terrainProvider,
+        cesiumSamplePoints
+      )
+      height = promise[0].height.toFixed(2)
+      return height
+    },
+    getBoundingBox(pLatitude, pLongitude, pDistanceInMeters) {
+      function getBoundingBoxs(pLatitude, pLongitude, pDistanceInMeters) {
+        let latRadian = pLatitude.toRad()
+        let degLatKm = 110.574235
+        let degLongKm = 110.572833 * Math.cos(latRadian)
+        let deltaLat = pDistanceInMeters / 1000.0 / degLatKm
+        let deltaLong = pDistanceInMeters / 1000.0 / degLongKm
+
+
+        let topLat = pLatitude + deltaLat
+        let bottomLat = pLatitude - deltaLat
+        let leftLng = pLongitude - deltaLong
+        let rightLng = pLongitude + deltaLong
+
+        // let northWestCoords = topLat + ',' + leftLng
+        // let northEastCoords = topLat + ',' + rightLng
+        // let southWestCoords = bottomLat + ',' + leftLng
+        // let southEastCoords = bottomLat + ',' + rightLng
+
+        // let boundingBox = [northWestCoords, northEastCoords, southWestCoords, southEastCoords]
+
+        let boundingBox = [leftLng,topLat,leftLng,bottomLat,rightLng,bottomLat,rightLng,topLat]
+        return boundingBox
+      }
+
+      if (typeof(Number.prototype.toRad) === "undefined") {
+        Number.prototype.toRad = function() {
+        return this * Math.PI / 180;
+       }
+      }
+      return getBoundingBoxs(pLatitude,pLongitude,pDistanceInMeters)
     }
   },
 }

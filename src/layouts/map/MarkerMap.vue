@@ -107,7 +107,7 @@
                     @change="showFloodedAreaFunc(floodItem.active, floodItem.name)"
                   ></v-switch>
                   <div class="d-flex align-center my-2">
-                    <span class="mx-2">海拔：{{(+(floodItem.height)).toFixed(2)}} cm</span>
+                    <span class="mx-2">海拔：{{(+(floodItem.height)).toFixed(2)}} m</span>
                     <v-btn x-small dark fab color="green" @click="pluseFloodAreaFunc(floodItem.name)">
                       <v-icon color="white">{{floodItem.isPause? 'mdi-play-circle-outline': 'mdi-pause-circle-outline'}}</v-icon>
                     </v-btn>
@@ -144,7 +144,16 @@
                     </v-btn>
                   </div>
                 </div>
-
+                <v-divider></v-divider>
+                <h4 class="mt-2">Click Flooded Simulation</h4>
+                <v-switch
+                  class="mt-0"
+                  color="blue"
+                  v-model="floodedSimulation"
+                  :hide-details="true"
+                  label="淹水模擬開關"
+                ></v-switch>
+                <p>模擬水位 {{targetFloodedHeight}} m</p>
                 <v-divider></v-divider>
                 <h4 class="mt-2">Functional Btn</h4>
                 <v-col cols="12">
@@ -166,6 +175,9 @@
           >{{isShowMapTools === true ? "＜":"＞"}}</span>
         </div>
       </div>
+      <!-- <WaterFloodedBoard 
+        :style="'waterFloodedBoardStyle'"
+      /> -->
       <BasicProgressbarVue 
         v-if="isLoading"
         :dataSize="200"
@@ -191,6 +203,7 @@ import floodedLists from '@/assets/cesium-object/floodedList.js'
 import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
 import ImgDialog from "@/components/dialog/ImgDialog.vue"
 import NotFoundDialog from "@/components/dialog/NotFoundDialog.vue"
+// import WaterFloodedBoard from "@/components/WaterFloodedBoard.vue"
 
 export default {
   name: "MarkerMap",
@@ -199,11 +212,12 @@ export default {
   },
   mixins: [customApi, wgProj4, customCesium],
   data: () => ({
+    orgId: 69,
     Cesium: null,
     originalPosition: {
       lon: 120.639,
-      lat: 24.164,
-      height: 800
+      lat: 24.001,
+      height: 20000
     },
     map: {
       mapTargetId: "MarkerMap",
@@ -224,10 +238,6 @@ export default {
     },
     dataLoading: false,
     interval: null,
-    ol3dData: {
-      ol3d: "",
-      scene: "",
-    },
     importKmlList: [
       {name: 'oneRoad', path: '../testkml/oneRoad.kml', positions: []},
       {name: 'oneRoadTwo', path: '../testkml/oneRoadTwo.kml', positions: []},
@@ -270,27 +280,38 @@ export default {
     },
     imgDailogIsOpen: false,
     notFoundDailogIsOpen: false,
+    siteInfoDom: false,
+    floodedBoxes: [],
+    floodedSimulation: true,
+    targetFloodedHeight: 0
   }),
   beforeMount() {
     this.floodedList = floodedLists
   },
   mounted: async function() {
     await this.initOriginCesium()
-
-
+    await this.getAllWaterLevelInfo(this.orgId)
+    .then(res=>{
+      let resData = res.data
+      resData.forEach((el,i)=>{
+        if(i > 77 && i < 88) {
+          this.addPointFunc(this.cesiumViewer, el) // add
+        }
+      })
+    })
+    .catch(err=>{
+      console.log(err)
+    })
     // 加入ION導航
     // this.addIonEntity(viewer)
 
     // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度
     this.setFeatureClickEvent(this.cesiumViewer)
 
-    // 打點
-    this.addPointFunc(this.cesiumViewer, this.dummyPosition)
-
     // 匯入本地KML檔案(此檔案為KML檔)
-    for(let el of this.importKmlList) {
-      await this.addKmlFileFunc(this.cesiumViewer, el.path, el.name)
-    }
+    // for(let el of this.importKmlList) {
+    //   await this.addKmlFileFunc(this.cesiumViewer, el.path, el.name)
+    // }
 
     // 設定拖曳KML匯入地圖
     this.setDragDropFunc(this.cesiumViewer)
@@ -309,7 +330,6 @@ export default {
     async showFloodedAreaFunc(state, name){
       let item = this.floodedList[name]
       if(state) {
-        console.log(this.floodedList[name].cesiumItem)
         if(this.floodedList[name].cesiumItem === null) {
           this.isLoading = true
           this.floodedList[name].cesiumItem = await this.addedFloodedPolygon(this.cesiumViewer, item, name)
@@ -461,6 +481,12 @@ export default {
       this.currentPositionInfo.floodUrl = ""
       this.currentPositionInfo.originalUrl = ""
     },
+    show(){
+      this.siteInfoDom = true
+    },
+    hide(){
+      this.siteInfoDom = false
+    },
   },
   computed: {
     turnCurrentUrl(){
@@ -469,10 +495,6 @@ export default {
     }
   }, 
   watch: {
-    mapRadio(){
-      this.setBaseSourceByBaseSourceId(this.map.mapTargetId,this.mapRadio)
-      this.changeCesiumSource(this.ol3dData.ol3d, this.mapRadio)
-    },
     weatherGroup(){
       this.removeWeather(this.cesiumViewer.scene)
       if(this.weatherGroup !== 'Cloudy') {
@@ -536,97 +558,5 @@ export default {
 }
 .arrow-style:hover{
   transform: translateX(5%);
-}
-.warningBox {
-  display: inline-block;
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-  z-index: 2;
-}
-.dashBoardBox {
-  display: inline-block;
-  position: absolute;
-  left: 50px;
-  top: 10px;
-  background-color: red;
-  z-index: 2;
-}
-.warning td {
-  white-space: nowrap;
-}
-.dashboardBtn {
-  bottom: 10px;
-  top: initial;
-  left: 50%;
-  margin-left: -55px;
-}
-#alertBox {
-  z-index: 3;
-}
-#wrapMap,
-#MarkerMap {
-  width: 100%;
-  height: 100%;
-}
-#wrapMap {
-  position: relative;
-}
-.ol-popup {
-  position: absolute;
-  background-color: white;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #cccccc;
-  bottom: 10px;
-  transform: translateX(-50%);
-}
-.ol-popup:after,
-.ol-popup:before {
-  top: 100%;
-  border: solid transparent;
-  content: " ";
-  height: 0;
-  width: 0;
-  position: absolute;
-  pointer-events: none;
-}
-.ol-popup:after {
-  border-top-color: white;
-  border-width: 10px;
-  left: 50%;
-  margin-left: -10px;
-}
-.ol-popup:before {
-  border-top-color: #cccccc;
-  border-width: 11px;
-  left: 50%;
-  margin-left: -11px;
-}
-.draggableContainer {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
-.draggableContainerDashboard {
-  position: absolute;
-  left: 50px;
-  top: 10px;
-}
-.draggableContainerDashboardCursor {
-  position: absolute;
-  left: 50px;
-  top: 10px;
-}
-.draggableContainerWarning {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-}
-.floodLegendStyle{
-  position: absolute;
-  right: 0px;
-  bottom: 70px;
 }
 </style>
