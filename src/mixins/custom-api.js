@@ -16,13 +16,32 @@ export default {
                 })
             })
         },
-        // 獲取某單位水位計全部資訊
-        getAllWaterLevelInfo: function (org_id) {
+        // 獲取某單位淹水感測器全部資訊
+        getFloodListData: function (org_id) {
             return new Promise((resolve,reject) => {
                 this.$http.get(this.waterExtraApiPath + '/flood/getFloodListData',{
                 params: {
                         org_id: org_id,
                         type: "flood",
+                    }
+                })
+                .then((res) => {
+                    resolve(res)
+                }).catch((err) => {
+                    reject(err)
+                })
+            })
+        },
+        // 獲取某單位淹水感測器歷史資料
+        getFloodLog: function (org_id, st_no, starttime) {
+            return new Promise((resolve,reject) => {
+                this.$http.get(this.waterExtraApiPath + '/flood/getFloodLogTime',{
+                params: {
+                        org_id: org_id,
+                        type: "flood",
+                        st_no: st_no,
+                        starttime: starttime,
+                        dtime: 10
                     }
                 })
                 .then((res) => {

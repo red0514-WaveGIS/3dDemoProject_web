@@ -187,6 +187,13 @@
         :turnCurrentUrl="turnCurrentUrl"
         @triggerClose="closeImgDialog"
       />
+      <SensorDialog
+        :sensorDailogIsOpen="sensorDailogIsOpen"
+        :sensorData="sensorData"
+        :sensorDataLog="sensorDataLog"
+        @triggerClose="closeSensorDialog"
+        @floodedSimulationFunc="floodedSimulationFunc(sensorGeoData)"
+      />
       <NotFoundDialog
         :notFoundDailogIsOpen="notFoundDailogIsOpen"
         @triggerClose="notFoundDailogIsOpen = false"
@@ -202,13 +209,14 @@ import weather from '@/assets/cesium-object/weather.js'
 import floodedLists from '@/assets/cesium-object/floodedList.js'
 import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
 import ImgDialog from "@/components/dialog/ImgDialog.vue"
+import SensorDialog from "@/components/dialog/SensorDialog.vue"
 import NotFoundDialog from "@/components/dialog/NotFoundDialog.vue"
 // import WaterFloodedBoard from "@/components/WaterFloodedBoard.vue"
 
 export default {
   name: "MarkerMap",
   components: {
-    BasicProgressbarVue,ImgDialog,NotFoundDialog
+    BasicProgressbarVue,ImgDialog,NotFoundDialog,SensorDialog
   },
   mixins: [customApi, wgProj4, customCesium],
   data: () => ({
@@ -282,19 +290,23 @@ export default {
     notFoundDailogIsOpen: false,
     siteInfoDom: false,
     floodedBoxes: [],
-    floodedSimulation: true,
-    targetFloodedHeight: 0
+    floodedSimulation: false,
+    targetFloodedHeight: 0,
+    sensorDailogIsOpen: false,
+    sensorData: [],
+    sensorDataLog: [],
+    sensorGeoData: []
   }),
   beforeMount() {
     this.floodedList = floodedLists
   },
   mounted: async function() {
     await this.initOriginCesium()
-    await this.getAllWaterLevelInfo(this.orgId)
+    await this.getFloodListData(this.orgId)
     .then(res=>{
       let resData = res.data
       resData.forEach((el,i)=>{
-        if(i > 77 && i < 88) {
+        if(i > 34 && i < 47) {
           this.addPointFunc(this.cesiumViewer, el) // add
         }
       })
@@ -305,20 +317,159 @@ export default {
     // 加入ION導航
     // this.addIonEntity(viewer)
 
-    // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度
-    this.setFeatureClickEvent(this.cesiumViewer)
+    // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度 ; 初始化Click事件
+    this.setInfoClick()
 
     // 匯入本地KML檔案(此檔案為KML檔)
     // for(let el of this.importKmlList) {
     //   await this.addKmlFileFunc(this.cesiumViewer, el.path, el.name)
     // }
+    // await this.addIonEntity(this.cesiumViewer)
 
     // 設定拖曳KML匯入地圖
     this.setDragDropFunc(this.cesiumViewer)
+    // 設定隨時Render畫面
+    // this.setInfoPostRender()
 
     this.doRoadingFunc(4000)
+    
+    // for test
+  //   const floodData = [10,14,15,16,20,19,16,13,10,11,9,4,10,12]
+  //   let currentHeight = floodData[0]
+  //   for(let data of floodData){
+  //     if(currentHeight !== data) {
+  //       if(currentHeight < data ) {
+  //         let range = data - currentHeight
+  //         for(let i = 0 ; i < range; i++) {
+  //           currentHeight += 1
+  //           console.log(currentHeight)
+  //         }
+  //       } else if (currentHeight > data ) {
+  //         let range = currentHeight - data
+  //         for(let i = 0 ; i < range; i++) {
+  //           currentHeight -= 1
+  //           console.log(currentHeight)
+  //         }
+  //       }
+  //     }
+  // }
+
+    
+
+
   },
   methods: {
+    setInfoClick(){
+      let currentThis = this
+      this.setFeatureEventListener(this.cesiumViewer, {
+        hasFeature: async function(handler) {
+          // Set left click event
+          handler.setInputAction(function(data) {
+            let pickedObjects = currentThis.cesiumViewer.scene.drillPick(data.position)
+            if(currentThis.Cesium.defined(pickedObjects)) {
+              if(pickedObjects.length >=1) {
+                let entity = pickedObjects[0].id
+                let geoDetail = currentThis.getLonLatHeightFunc(data)
+                // Get target info
+                console.log(entity.store,geoDetail)
+                let st_no = entity.store.st_no
+                currentThis.getFloodLog(69,st_no)
+                .then(res=>{
+                  currentThis.sensorDataLog = res.data
+                })
+                .catch(err=>{
+                  console.log(err)
+                })
+                .finally(()=>{
+                  currentThis.sensorData = entity.store
+                  currentThis.sensorGeoData = data
+                  currentThis.sensorDailogIsOpen = true
+                })
+              }
+            }
+          }, currentThis.Cesium.ScreenSpaceEventType.LEFT_CLICK) // left click
+
+          // Set right click event
+          handler.setInputAction(function(data) {
+            let lonlatInfo = currentThis.getLonLatHeightFunc(data)
+            console.log(lonlatInfo)
+
+          }, currentThis.Cesium.ScreenSpaceEventType.RIGHT_CLICK) // Right click
+
+          // Set scroll wheel event
+          handler.setInputAction(async function() {
+            
+          }, currentThis.Cesium.ScreenSpaceEventType.WHEEL) // scroll wheel
+        }
+      })
+    },
+    setInfoPostRender(){
+      this.setPostRender(this.cesiumViewer, {
+        hasFeature: async function(handler) {
+          handler.addEventListener(() => {
+            console.log('do postRender!')
+          })
+        }
+      })
+    },
+    // 產生淹水模擬圖片
+    getFloodedImageFunc(latitudeString, longitudeString){
+      this.doRoadingFunc(null, true)
+      this.getFloodedImage(+latitudeString, +longitudeString)
+      .then(res=>{
+        let resData = res.data 
+        this.currentPositionInfo.originalUrl = resData.originalUrl
+        this.currentPositionInfo.floodUrl = resData.floodUrl
+        this.currentPositionInfo.lonLat = `(${longitudeString}, ${latitudeString})`
+        setTimeout(()=>{
+          this.doRoadingFunc(null, false)
+          this.imgDailogIsOpen = true
+        },5000)
+      })
+      .catch(err=>{
+        console.log(err)
+        this.doRoadingFunc(null, false)
+        this.notFoundDailogIsOpen = true
+      })
+    },
+    getLonLatHeightFunc(data){
+      let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
+      let ray = this.cesiumViewer.camera.getPickRay(data.position)
+      let cartesian3 = this.cesiumViewer.scene.globe.pick(ray, this.cesiumViewer.scene)
+      let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
+      //將弧度轉為度的十進位制度表示
+      let longitudeString = this.Cesium.Math.toDegrees(cartographic.longitude).toFixed(4)
+      let latitudeString = this.Cesium.Math.toDegrees(cartographic.latitude).toFixed(4)
+      let geoDetail = {
+        lon: +longitudeString,
+        lat: +latitudeString,
+        height: cartographic.height
+      }
+      return geoDetail
+    },
+    floodedSimulationFunc(geoData){
+      let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
+      let ray = this.cesiumViewer.camera.getPickRay(geoData.position)
+      let cartesian3 = this.cesiumViewer.scene.globe.pick(ray, this.cesiumViewer.scene)
+      let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
+      let lon = this.Cesium.Math.toDegrees(cartographic.longitude)
+      let lat = this.Cesium.Math.toDegrees(cartographic.latitude)
+      let geoDetail = {
+        lon: lon,
+        lat: lat,
+        height: cartographic.height,
+        sensorLog: this.sensorDataLog
+      }
+      // 獲取中心點向外擴4點
+      let pointAroundSquare = this.getBoundingBox(lat, lon, 100)    
+      for(let el of this.floodedBoxes) {
+        this.cesiumViewer.entities.removeById(el.id)
+      }
+      let entity = this.addedFloodedPolygonWithLatLon(this.cesiumViewer, pointAroundSquare, geoDetail)
+      this.floodedBoxes = []
+      this.floodedBoxes.push(entity.flooded)
+      this.floodedBoxes.push(entity.flag)
+    },
     collapseFunc(){
       this.isShowMapTools = !this.isShowMapTools
       if(this.isShowMapTools) {
@@ -480,6 +631,10 @@ export default {
       this.imgDailogIsOpen = false
       this.currentPositionInfo.floodUrl = ""
       this.currentPositionInfo.originalUrl = ""
+    },
+    closeSensorDialog(){
+      this.sensorDailogIsOpen = false
+      this.sensorData = []
     },
     show(){
       this.siteInfoDom = true

@@ -2,10 +2,10 @@
   <v-progress-linear
     indeterminate
     :color="dataColor"
-    height="20"
+    height="10"
   >
     <template>
-      Loading...
+      <small>Loading...</small>
     </template>
   </v-progress-linear>
 </template>
@@ -24,9 +24,9 @@ export default {
 
 <style scoped>
 .v-progress-linear{
-    position: absolute !important;
-    bottom: 0;
+    top: 10px;
     left: 0;
     border-radius: 3px;
+    z-index: 2;
 }
 </style>

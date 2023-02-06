@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf'
-import { setTimeout } from 'core-js';
+// import { setTimeout } from 'core-js';
 // import buildingNum from '@/assets/nlscDada';
 
 
@@ -57,21 +57,22 @@ export default {
         url : Cesium.IonResource.fromAssetId(1485755),
         requestVertexNormals : true,
       })
-      console.log(terrainModels)
       // Cesium' s Instance initialize 設定
       const viewer = new Cesium.Viewer('cesiumContainer', {
         imageryProvider: this.cesiumBaseSources["satelliteOnly"], // 加入地圖影像
         terrainProvider: terrainModels, // 加入地圖地形
         baseLayerPicker: false, // 隱藏 default 圖層選擇器
         navigationHelpButton: false, // 隱藏 default 導覽按鈕
+        infoBox: false, // 關閉點擊icon後彈窗
         shouldAnimate: true,
+        selectionIndicator: false // 關閉聚焦icon
       })
-
       // Viewer相關設定
       // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
-      viewer.infoBox.frame.removeAttribute("sandbox")
-      viewer.infoBox.frame.src = "about:blank"
-      this.hideTimer(viewer)
+      // viewer.infoBox.frame.removeAttribute("sandbox")
+      // viewer.infoBox.frame.src = "about:blank"
+      // this.hideTimer(viewer)
+      this.setCurrentTime(viewer)
 
       // Viewer.scene
       viewer.scene.globe.depthTestAgainstTerrain = true 
@@ -81,10 +82,11 @@ export default {
       // viewer.scene.postProcessStages.fxaa.enabled = true;
       // viewer.scene.debugShowFramesPerSecond = true;
 
+
       // 加載並完成所有 initialize 後， 附值給全域使用
       this.Cesium = Cesium
       this.cesiumViewer = viewer
-      
+
       // Set initial position
       this.cameraFlyTo(viewer, this.originalPosition)
     },
@@ -92,15 +94,17 @@ export default {
       const positionProperty = new Cesium.SampledPositionProperty()
       const timeSpan = 30
       const totalSeconds = timeSpan * (this.importKmlList[2].positions.length - 1)
-      const start = Cesium.JulianDate.fromIso8601("2022-12-04T21:10:00Z")
+      const start = Cesium.JulianDate.fromIso8601("2022-12-04T06:30:00Z")
       const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate())
-      
+
       viewer.clock.startTime = start.clone()
       viewer.clock.stopTime = stop.clone()
       viewer.clock.currentTime = start.clone()
       viewer.timeline.zoomTo(start, stop)
-      viewer.clock.multiplier = 50
+      viewer.clock.multiplier = 600 // 1秒 = 1 ; 1分 = 60 ; 10分 = 600
       viewer.clock.shouldAnimate = true
+      viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP
+      viewer.clock 
 
       this.importKmlList[2].positions.forEach((position,index)=>{
         const time = Cesium.JulianDate.addSeconds(start, index * timeSpan, new Cesium.JulianDate())
@@ -166,91 +170,13 @@ export default {
         viewer.dataSources.add(kmlData)
       })
     },
-    setFeatureClickEvent(viewer){
+    setFeatureEventListener(viewer, doFunc){
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
-      let entity = viewer.entities.add({
-        label : {
-          show : false
-        }
-      })
-
-      let ellipsoid = viewer.scene.globe.ellipsoid
-      let longitudeString = null
-      let latitudeString = null
-      let height = null
-      let cartesian = null
-      let currentThis = this
-
-      // Set right click event
-      handler.setInputAction(function(movement) {
-        cartesian = viewer.camera.pickEllipsoid(movement.position, ellipsoid)
-        if (cartesian) {
-          //將笛卡爾座標轉換為地理座標
-          let cartographic = ellipsoid.cartesianToCartographic(cartesian)
-          //將弧度轉為度的十進位制度表示
-          longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4)
-          latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4)
-          //獲取相機高度
-          height = Math.ceil(viewer.camera.positionCartographic.height)
-          entity.position = cartesian
-          // entity.label.show = true
-          entity.label.text = '(' + longitudeString + ', ' + latitudeString + "," + height + ')'
-          currentThis.currentPositionInfo.lonLat = entity.label.text._value
-
-          currentThis.doRoadingFunc(null, true)
-
-          currentThis.getFloodedImage(+latitudeString, +longitudeString)
-          .then(res=>{
-            let resData = res.data 
-            currentThis.currentPositionInfo.originalUrl = resData.originalUrl
-            currentThis.currentPositionInfo.floodUrl = resData.floodUrl
-            setTimeout(()=>{
-              currentThis.doRoadingFunc(null, false)
-              currentThis.imgDailogIsOpen = true
-            },5000)
-          })
-          .catch(err=>{
-            console.log(err)
-            currentThis.doRoadingFunc(null, false)
-            currentThis.notFoundDailogIsOpen = true
-          })
-        }else {
-          entity.label.show = false;
-        }
-      }, Cesium.ScreenSpaceEventType.RIGHT_CLICK) // Right click
-
-      // Set scroll wheel event
-      handler.setInputAction(async function() {
-        // console.log(wheelment)
-        
-      }, Cesium.ScreenSpaceEventType.WHEEL) // scroll wheel
-
-      // Set left click event
-      handler.setInputAction(function(movement) {
-        if(currentThis.floodedSimulation) {
-          let ray = viewer.camera.getPickRay(movement.position)
-          let cartesian3 = viewer.scene.globe.pick(ray, viewer.scene)
-
-          let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
-          let lon = Cesium.Math.toDegrees(cartographic.longitude)
-          let lat = Cesium.Math.toDegrees(cartographic.latitude)
-          let geoDetail = {
-            lon: lon,
-            lat: lat,
-            height: cartographic.height,
-          }
-          
-          // 獲取中心點向外擴4點
-          let pointAroundSquare = currentThis.getBoundingBox(lat, lon, 100)    
-          for(let el of currentThis.floodedBoxes) {
-            viewer.entities.removeById(el.id)
-          }
-          let entity = currentThis.addedFloodedPolygonWithLatLon(viewer, pointAroundSquare, geoDetail)
-          currentThis.floodedBoxes = []
-          currentThis.floodedBoxes.push(entity.flooded)
-          currentThis.floodedBoxes.push(entity.flag)
-        }
-      }, Cesium.ScreenSpaceEventType.LEFT_CLICK) // left click
+      doFunc.hasFeature(handler)
+    },
+    setPostRender(viewer, doFunc){
+      let handler = viewer.scene.postRender
+      doFunc.hasFeature(handler)
     },
     addBuilding(viewer){
       // 引入內政部國土測繪中心 三維建物服務 (以台北市為例)
@@ -397,13 +323,12 @@ export default {
       let currentThis = this
       let height = new Cesium.CallbackProperty(function () {
         if(increase) {
-          value += 0.05
+          value += 0.01
           if(value >= heightest) {
-            // alert('達點位上升5m水位')
             increase = false
           }
         } else {
-          value -= 0.05
+          value -= 0.01
           if(value <= lowest) {
             increase = true
           }
@@ -413,7 +338,18 @@ export default {
       }, false)
       let areaName = `${geoDetail.lon.toFixed(2)}, ${geoDetail.lat.toFixed(2)}, ${geoDetail.height.toFixed(2)}`
       // 加入淹水區域
-      let materialType = Cesium.Color.DEEPSKYBLUE.withAlpha(0.7)
+      let r=66, g=199, b=245
+      //New color every time it's called
+      let fadeColor = new Cesium.CallbackProperty(function(time, result){
+        let currentHeight = height.getValue()
+        if(currentHeight > heights+3) {
+          r=238, g=48, b=47; // red
+        } else {
+          r=66, g=199, b=245; // blue
+        }
+        return Cesium.Color.fromBytes(r, g, b, 160, result);
+      }, false)
+
       let entity = {
           id: lonlat,
           name: areaName,
@@ -435,17 +371,12 @@ export default {
             id: lonlat,
             hierarchy: Cesium.Cartesian3.fromDegreesArray(floodedAreaPoint),
             extrudedHeight: height, 
-            material: materialType,
+            material: new Cesium.ColorMaterialProperty(fadeColor),
             closeTop: true,
             closeBottom: true,
             outline: true,
-            outlineColor: materialType,
+            outlineColor: new Cesium.ColorMaterialProperty(fadeColor),
           },
-          description: `
-            <div style="padding: 10px; height:400px;">
-              <h3 style="color:red">經緯度：${areaName}<h3>
-            </div>
-          `
       }
       viewer.entities.add(entity)
       
@@ -554,6 +485,12 @@ export default {
       viewer.timeline.container.style.visibility = 'hidden'
       viewer.forceResize()
     },
+    setCurrentTime(viewer){
+      viewer.animation.viewModel.timeFormatter = function(date) {
+        date = Cesium.JulianDate.toDate(date)
+        return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+      }
+    },
     async addPointFunc(viewer, item){
       let st_name = item.st_name
       let st_no = item.st_no
@@ -660,7 +597,8 @@ export default {
               </td>
             </tr>
           </table>
-        `
+        `,
+        store: item
       }
       viewer.entities.add(billboard)
     },
