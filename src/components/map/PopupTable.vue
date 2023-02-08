@@ -12,7 +12,6 @@
       <td colspan="2">
         <div class="d-flex justify-center my-2">
           <v-btn class="mx-2" dark small color="success" @click="$emit('showFloodSimulation')"><v-icon left>mdi-home-flood</v-icon>顯示淹水模擬圖</v-btn>
-          <v-btn class="mx-2" dark small color="info" @click="$emit('showMapFloodSimulation')"><v-icon left>mdi-water-alert</v-icon>顯示3D淹水模擬</v-btn>
         </div>
       </td>
     </tr>

@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf'
+// import { format as dateFormat } from "date-fns"
 // import { setTimeout } from 'core-js';
 // import buildingNum from '@/assets/nlscDada';
 
@@ -71,8 +72,9 @@ export default {
       // https://community.cesium.com/t/cant-run-scripts-in-infobox/11956/2
       // viewer.infoBox.frame.removeAttribute("sandbox")
       // viewer.infoBox.frame.src = "about:blank"
-      // this.hideTimer(viewer)
-      this.setCurrentTime(viewer)
+      this.hideTimer(viewer)
+      // this.setCurrentTime(viewer)
+      // viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2023-02-07T01:39:50Z")
 
       // Viewer.scene
       viewer.scene.globe.depthTestAgainstTerrain = true 
@@ -102,9 +104,7 @@ export default {
       viewer.clock.currentTime = start.clone()
       viewer.timeline.zoomTo(start, stop)
       viewer.clock.multiplier = 600 // 1秒 = 1 ; 1分 = 60 ; 10分 = 600
-      viewer.clock.shouldAnimate = true
       viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP
-      viewer.clock 
 
       this.importKmlList[2].positions.forEach((position,index)=>{
         const time = Cesium.JulianDate.addSeconds(start, index * timeSpan, new Cesium.JulianDate())
@@ -314,26 +314,21 @@ export default {
     },
     addedFloodedPolygonWithLatLon(viewer, floodedAreaPoint, geoDetail){
       let heights = geoDetail.height
-      let heightest = heights + 5
-      let lowest = heights - 2
-      let value = lowest
-      let increase = false
+      let value = heights
       let lonlat = geoDetail.lon + geoDetail.lat
       let cartesian3 = Cesium.Cartesian3.fromDegrees(geoDetail.lon, geoDetail.lat)
       let currentThis = this
-      let height = new Cesium.CallbackProperty(function () {
-        if(increase) {
-          value += 0.01
-          if(value >= heightest) {
-            increase = false
-          }
-        } else {
-          value -= 0.01
-          if(value <= lowest) {
-            increase = true
+      let height = new Cesium.CallbackProperty(function (time) {
+        if(time){
+          // let jsDate = new Date(time)
+          // let currentTime = dateFormat(
+          //   jsDate,
+          //   "yyyy-MM-dd HH:mm:ss"
+          // )
+          if(currentThis.sensorLogQueue[currentThis.selectedFloodDate]) {
+            value = currentThis.sensorLogQueue[currentThis.selectedFloodDate]
           }
         }
-        currentThis.targetFloodedHeight = value.toFixed(2)
         return value
       }, false)
       let areaName = `${geoDetail.lon.toFixed(2)}, ${geoDetail.lat.toFixed(2)}, ${geoDetail.height.toFixed(2)}`
@@ -342,7 +337,7 @@ export default {
       //New color every time it's called
       let fadeColor = new Cesium.CallbackProperty(function(time, result){
         let currentHeight = height.getValue()
-        if(currentHeight > heights+3) {
+        if(currentHeight > heights + 0.2) {
           r=238, g=48, b=47; // red
         } else {
           r=66, g=199, b=245; // blue

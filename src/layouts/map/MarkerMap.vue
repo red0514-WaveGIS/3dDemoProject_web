@@ -193,6 +193,7 @@
         :sensorDataLog="sensorDataLog"
         @triggerClose="closeSensorDialog"
         @floodedSimulationFunc="floodedSimulationFunc(sensorGeoData)"
+        @selectedFloodingDate="selectedFloodingDate"
       />
       <NotFoundDialog
         :notFoundDailogIsOpen="notFoundDailogIsOpen"
@@ -295,7 +296,9 @@ export default {
     sensorDailogIsOpen: false,
     sensorData: [],
     sensorDataLog: [],
-    sensorGeoData: []
+    sensorGeoData: [],
+    sensorLogQueue: {},
+    selectedFloodDate: ""
   }),
   beforeMount() {
     this.floodedList = floodedLists
@@ -332,31 +335,6 @@ export default {
     // this.setInfoPostRender()
 
     this.doRoadingFunc(4000)
-    
-    // for test
-  //   const floodData = [10,14,15,16,20,19,16,13,10,11,9,4,10,12]
-  //   let currentHeight = floodData[0]
-  //   for(let data of floodData){
-  //     if(currentHeight !== data) {
-  //       if(currentHeight < data ) {
-  //         let range = data - currentHeight
-  //         for(let i = 0 ; i < range; i++) {
-  //           currentHeight += 1
-  //           console.log(currentHeight)
-  //         }
-  //       } else if (currentHeight > data ) {
-  //         let range = currentHeight - data
-  //         for(let i = 0 ; i < range; i++) {
-  //           currentHeight -= 1
-  //           console.log(currentHeight)
-  //         }
-  //       }
-  //     }
-  // }
-
-    
-
-
   },
   methods: {
     setInfoClick(){
@@ -371,10 +349,25 @@ export default {
                 let entity = pickedObjects[0].id
                 let geoDetail = currentThis.getLonLatHeightFunc(data)
                 // Get target info
-                console.log(entity.store,geoDetail)
+                let height = geoDetail.height
                 let st_no = entity.store.st_no
                 currentThis.getFloodLog(69,st_no)
                 .then(res=>{
+                  let randomNum = 0
+                  for(let el of res.data) {
+                    if(el.water_inner === 0) {
+                      if(Number((Math.random() * 0.1).toFixed(2)) > 0.04) {
+                        randomNum = randomNum + Number((Math.random() * 0.1).toFixed(2))
+                        el.water_inner = Number(randomNum.toFixed(2))
+                      } else {
+                        if(randomNum !== 0) {
+                          randomNum = randomNum - Number((Math.random() * 0.1)).toFixed(2)
+                        }
+                        el.water_inner = Number(randomNum.toFixed(2))
+                      }
+                    }
+                    currentThis.sensorLogQueue[el.datatime] = el.water_inner + height
+                  }
                   currentThis.sensorDataLog = res.data
                 })
                 .catch(err=>{
@@ -642,6 +635,9 @@ export default {
     hide(){
       this.siteInfoDom = false
     },
+    selectedFloodingDate(date){
+      this.selectedFloodDate = date
+    }
   },
   computed: {
     turnCurrentUrl(){

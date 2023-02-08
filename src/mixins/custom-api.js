@@ -41,7 +41,7 @@ export default {
                         type: "flood",
                         st_no: st_no,
                         starttime: starttime,
-                        dtime: 10
+                        dtime: 60,
                     }
                 })
                 .then((res) => {

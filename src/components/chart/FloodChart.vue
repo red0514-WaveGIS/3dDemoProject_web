@@ -50,6 +50,7 @@ export default {
         }
       ],
       grid: {
+        right: 8,
         bottom: 20, // default is 60
       }
     },
