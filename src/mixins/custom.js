@@ -1,7 +1,5 @@
 import Vue from "vue"
 import { format as dateFormat } from "date-fns"
-import axios from 'axios'
-import store from '@/store/index.js'
 Vue.mixin({
   data: () => ({
     validRules: {
@@ -203,103 +201,6 @@ Vue.mixin({
       return new Promise((resolve) => {
         setTimeout(resolve, interval)
       })
-    },
-    updatePagePrivilege() {
-      const $vm = this
-      let apiurl = "/api/userthb"
-      if(process.env.NODE_ENV === 'productionDev') {
-        apiurl = "/api/userthb/dev"
-      } else if(process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
-        apiurl = "/api/userthb"
-      }
-      axios.get(`${apiurl}/thb/prep/getSelfBaseInfo`)
-      .then((res) => {
-          let user = res.data
-          store.commit("setUserInfo", { user })
-          store.commit("user/setUserInfo", { user })
-        }).then(() => {
-          let privilegesList = $vm.$store.state.userInfo.privileges
-          privilegesList = privilegesList.filter(tp => tp.parentId == null).sort(this.compareByRanking)
-          this.$store.state.leftNavDrawerItems = privilegesList
-        })
-    },
-    reloadPagePrivilege() {
-      // 當使用者點擊後，vuex內的資料會reload，因此要再寫一次
-      const $vm = this
-      let apiurl = "/api/userthb"
-      if(process.env.NODE_ENV === 'productionDev') {
-        apiurl = "/api/userthb/dev"
-      } else if(process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
-        apiurl = "/api/userthb"
-      }
-      axios.get(`${apiurl}/thb/prep/getSelfBaseInfo`)
-      .then((res) => {
-        let user = res.data
-          store.commit("setUserInfo", { user })
-          store.commit("user/setUserInfo", { user })
-        }).then(() => {
-          let privilegesList = $vm.$store.state.userInfo.privileges
-          getPrivilege(privilegesList)
-        })
-      function getPrivilege(item) {
-        item.forEach(item => {          
-          if(item.href === $vm.$router.currentRoute.path && item.href!=="/building") {
-            let pagePrivileges = {
-              edit: item.edit,
-              view: item.view,
-              additionalFeatures: item.additionalFeatures[0] ?? ""
-            }
-            $vm.$store.commit("setPagePrivileges", {pagePrivileges}) 
-        }
-          if (item.children?.length > 0) {
-            getPrivilege(item.children)
-          }
-        })
-      }
-    },
-    checkItemOrg(item) {
-      let userEdit = this.getUserViewEdit('edit')
-      if(userEdit === 'ALL') {
-        return true
-      } else if(userEdit === 'UNIT_SELF') {
-        if( this.$store.state.userInfo.org1s[0] !== ""
-            && this.$store.state.userInfo.org2s[0] === "" 
-            && this.$store.state.userInfo.org3s[0] === "") {
-          return true
-        } else if( 
-          this.$store.state.userInfo.org1s[0] !== ""
-          && this.$store.state.userInfo.org2s[0] !== ""
-          && this.$store.state.userInfo.org3s[0] === ""){
-          if(this.$store.state.userInfo.org2s.includes(item.org_2)) {
-            return true
-          } else {
-            return false
-          }
-        } else {
-          if(this.$store.state.userInfo.org3s.includes(item.org_3)) {
-            return true
-          } else {
-            return false
-          }
-        }
-      } else if(userEdit === 'UNIT') {
-        if(((item.org_1 != "" && this.$store.state.userInfo.org1s.includes(item.org_1)) || (item.org_1 == "" && this.$store.state.userInfo.org1s.includes("")))
-        && ((item.org_2 != "" && this.$store.state.userInfo.org2s.includes(item.org_2)) || (item.org_2 == "" && this.$store.state.userInfo.org2s.includes("")))
-        && ((item.org_3 != "" && this.$store.state.userInfo.org3s.includes(item.org_3)) || (item.org_3 == "" && this.$store.state.userInfo.org3s.includes("")))
-        ) {
-          return true
-        } else {
-          return false
-        }
-      } else if(userEdit === 'SELF') {
-        if(this.$store.state.userInfo.name === item.build_p || this.$store.state.userInfo.name === item.update_p) {
-          return true
-        } else {
-          return false
-        }
-      } else {
-        return false
-      }
     },
     str2dateForSafari: function(dateStr){
       if (typeof dateStr === "string") {

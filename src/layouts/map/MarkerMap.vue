@@ -135,26 +135,6 @@
                   </v-radio>
                 </v-radio-group>
                 <v-divider></v-divider>
-                <h4 class="mt-2">KML & Points</h4>
-                <div class="mt-2" v-for="el of importKmlList" :key="el.name">
-                  <div class="d-flex align-center my-2">
-                    <span class="mx-2">Name: {{ el.name }}</span>
-                    <v-btn class="ml-2" color="red" x-small dark fab @click="cameraFlyToFunc('kml', el.positions)">
-                      <v-icon color="white">mdi-airplane-takeoff</v-icon>
-                    </v-btn>
-                  </div>
-                </div>
-                <v-divider></v-divider>
-                <h4 class="mt-2">Click Flooded Simulation</h4>
-                <v-switch
-                  class="mt-0"
-                  color="blue"
-                  v-model="floodedSimulation"
-                  :hide-details="true"
-                  label="淹水模擬開關"
-                ></v-switch>
-                <p>模擬水位 {{targetFloodedHeight}} m</p>
-                <v-divider></v-divider>
                 <h4 class="mt-2">Functional Btn</h4>
                 <v-col cols="12">
                   <v-btn
@@ -175,9 +155,9 @@
           >{{isShowMapTools === true ? "＜":"＞"}}</span>
         </div>
       </div>
-      <!-- <WaterFloodedBoard 
-        :style="'waterFloodedBoardStyle'"
-      /> -->
+      <LonLatHeigntLable
+        :lonLatHeightData="lonLatHeightData"
+      />
       <BasicProgressbarVue 
         v-if="isLoading"
         :dataSize="200"
@@ -191,8 +171,10 @@
         :sensorDailogIsOpen="sensorDailogIsOpen"
         :sensorData="sensorData"
         :sensorDataLog="sensorDataLog"
+        :pDistanceInMeters="pDistanceInMeters"
+        @changeFloodAreaFunc="changeFloodAreaFunc"
         @triggerClose="closeSensorDialog"
-        @floodedSimulationFunc="floodedSimulationFunc(sensorGeoData)"
+        @floodedSimulationFunc="floodedSimulationFunc()"
         @selectedFloodingDate="selectedFloodingDate"
       />
       <NotFoundDialog
@@ -212,12 +194,12 @@ import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
 import ImgDialog from "@/components/dialog/ImgDialog.vue"
 import SensorDialog from "@/components/dialog/SensorDialog.vue"
 import NotFoundDialog from "@/components/dialog/NotFoundDialog.vue"
-// import WaterFloodedBoard from "@/components/WaterFloodedBoard.vue"
+import LonLatHeigntLable from "@/components/map/LonLatHeigntLable.vue"
 
 export default {
   name: "MarkerMap",
   components: {
-    BasicProgressbarVue,ImgDialog,NotFoundDialog,SensorDialog
+    BasicProgressbarVue,ImgDialog,NotFoundDialog,SensorDialog,LonLatHeigntLable
   },
   mixins: [customApi, wgProj4, customCesium],
   data: () => ({
@@ -233,35 +215,8 @@ export default {
       lon: 121.556,
       lat: 25.035,
     },
-    layerName: "DataPoint",
-    styleRemark: "dataIcon",
-    mapSource: "",
-    popupCol: [],
-    switchLayer: {
-      count: 0,
-      item: {
-        name: "",
-        type: "",
-        value: 112
-      }
-    },
     dataLoading: false,
-    interval: null,
-    importKmlList: [
-      {name: 'oneRoad', path: '../testkml/oneRoad.kml', positions: []},
-      {name: 'oneRoadTwo', path: '../testkml/oneRoadTwo.kml', positions: []},
-      {name: 'cyclingPath', path: '../testkml/cyclingPath.kml', positions: []},
-    ],
-    dummyPosition: {
-      longitude: 120.63907129640684, 
-      latitude: 24.168809936996578,
-      height: 200,
-    },
     buildingState: false,
-    switch3: false,
-    switch4: false,
-    testToggle: false,
-    terrain: null,
     isShowMapTools: false,
     positionStyle: 'transform: translateX(-89%); height: 50%; top:22%;',
     mapRadio: 'hybrid',
@@ -281,7 +236,6 @@ export default {
     cesiumViewer: null,
     isLoading: true,
     floodedList: null,
-    test: 0,
     currentPositionInfo: {
       lonLat: '',
       originalUrl: '',
@@ -298,7 +252,13 @@ export default {
     sensorDataLog: [],
     sensorGeoData: [],
     sensorLogQueue: {},
-    selectedFloodDate: ""
+    selectedFloodDate: "",
+    pDistanceInMeters: 100,
+    lonLatHeightData: {
+      lon: 0,
+      lat: 0,
+      height: 0,
+    }
   }),
   beforeMount() {
     this.floodedList = floodedLists
@@ -320,14 +280,8 @@ export default {
     // 加入ION導航
     // this.addIonEntity(viewer)
 
-    // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度 ; 初始化Click事件
-    this.setInfoClick()
-
-    // 匯入本地KML檔案(此檔案為KML檔)
-    // for(let el of this.importKmlList) {
-    //   await this.addKmlFileFunc(this.cesiumViewer, el.path, el.name)
-    // }
-    // await this.addIonEntity(this.cesiumViewer)
+    // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度 ; 初始化Cesium事件
+    this.setCesiumEvent()
 
     // 設定拖曳KML匯入地圖
     this.setDragDropFunc(this.cesiumViewer)
@@ -337,7 +291,7 @@ export default {
     this.doRoadingFunc(4000)
   },
   methods: {
-    setInfoClick(){
+    setCesiumEvent(){
       let currentThis = this
       this.setFeatureEventListener(this.cesiumViewer, {
         hasFeature: async function(handler) {
@@ -349,7 +303,7 @@ export default {
                 let entity = pickedObjects[0].id
                 let geoDetail = currentThis.getLonLatHeightFunc(data)
                 // Get target info
-                let height = geoDetail.height
+                let height = geoDetail.height // 這裡的height是指 地圖點擊這個點的高度
                 let st_no = entity.store.st_no
                 currentThis.getFloodLog(69,st_no)
                 .then(res=>{
@@ -358,12 +312,12 @@ export default {
                     if(el.water_inner === 0) {
                       if(Number((Math.random() * 0.1).toFixed(2)) > 0.04) {
                         randomNum = randomNum + Number((Math.random() * 0.1).toFixed(2))
-                        el.water_inner = Number(randomNum.toFixed(2))
+                        el.water_inner = Math.abs(Number(randomNum.toFixed(2)))
                       } else {
                         if(randomNum !== 0) {
                           randomNum = randomNum - Number((Math.random() * 0.1)).toFixed(2)
                         }
-                        el.water_inner = Number(randomNum.toFixed(2))
+                        el.water_inner = Math.abs(Number(randomNum.toFixed(2)))
                       }
                     }
                     currentThis.sensorLogQueue[el.datatime] = el.water_inner + height
@@ -389,10 +343,14 @@ export default {
 
           }, currentThis.Cesium.ScreenSpaceEventType.RIGHT_CLICK) // Right click
 
-          // Set scroll wheel event
-          handler.setInputAction(async function() {
-            
-          }, currentThis.Cesium.ScreenSpaceEventType.WHEEL) // scroll wheel
+          // Set scroll MOUSE_MOVE  event
+          handler.setInputAction(async function(data) {
+            let cartesian2 = {position: data.endPosition}
+            let lonlatInfo = currentThis.getLonLatHeightFunc(cartesian2)
+            currentThis.lonLatHeightData.lon = lonlatInfo.lon
+            currentThis.lonLatHeightData.lat = lonlatInfo.lat
+            currentThis.lonLatHeightData.height = lonlatInfo.height
+          }, currentThis.Cesium.ScreenSpaceEventType.MOUSE_MOVE) // scroll MOUSE_MOVE 
         }
       })
     },
@@ -440,7 +398,8 @@ export default {
       }
       return geoDetail
     },
-    floodedSimulationFunc(geoData){
+    floodedSimulationFunc(){
+      let geoData = this.sensorGeoData
       let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
       let ray = this.cesiumViewer.camera.getPickRay(geoData.position)
       let cartesian3 = this.cesiumViewer.scene.globe.pick(ray, this.cesiumViewer.scene)
@@ -454,7 +413,7 @@ export default {
         sensorLog: this.sensorDataLog
       }
       // 獲取中心點向外擴4點
-      let pointAroundSquare = this.getBoundingBox(lat, lon, 100)    
+      let pointAroundSquare = this.getBoundingBox(lat, lon, this.pDistanceInMeters)    
       for(let el of this.floodedBoxes) {
         this.cesiumViewer.entities.removeById(el.id)
       }
@@ -637,6 +596,9 @@ export default {
     },
     selectedFloodingDate(date){
       this.selectedFloodDate = date
+    },
+    changeFloodAreaFunc(floodAreaMeter) {
+      this.pDistanceInMeters = floodAreaMeter
     }
   },
   computed: {

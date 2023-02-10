@@ -1,13 +1,9 @@
 import * as Cesium from 'cesium';
 import * as turf from '@turf/turf'
-// import { format as dateFormat } from "date-fns"
-// import { setTimeout } from 'core-js';
-// import buildingNum from '@/assets/nlscDada';
-
 
 export default {
   data: () => ({
-    // red' s cesium ION
+    // Red' s cesium ION
     token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNTFkYWFlNi03NmJkLTQ4NTYtYTdmZC01ZWFiMmYyN2UwNzYiLCJpZCI6MTE0NzQ5LCJpYXQiOjE2NjgzOTQ2OTh9.CpaV1PVZonfT71zS8iIkv5lzU8mEmDspL4GVEKj8qy8',
     cesiumBaseSources: {
       standardRoadMap: new Cesium.UrlTemplateImageryProvider({
@@ -179,24 +175,6 @@ export default {
       doFunc.hasFeature(handler)
     },
     addBuilding(viewer){
-      // 引入內政部國土測繪中心 三維建物服務 (以台北市為例)
-      // await fetch(`/api/3dtiles/building/tiles3d/${buildingNum["臺北市"].num}/tileset.json`)
-      // .then(response => response.json())
-      // .then(data=>{
-      //   console.log(data)
-      // })
-      // .catch(err=>{
-      //   console.log(err)
-      // })
-
-      // let sceneBuilding
-
-      // let sceneBuilding = viewer.scene.primitives.add(
-      //   new Cesium.Cesium3DTileset({
-      //     url: `/api/3dtiles/building/tiles3d/${buildingNum["臺北市"].num}/tileset.json`,
-      //   })
-      // )
-
       const osmBuildingsTileset = Cesium.createOsmBuildings({
         style: new Cesium.Cesium3DTileStyle({
           color : {
@@ -344,34 +322,33 @@ export default {
         }
         return Cesium.Color.fromBytes(r, g, b, 160, result);
       }, false)
-
       let entity = {
+        id: lonlat,
+        name: areaName,
+        position: cartesian3,
+        label: {
+          text: areaName,
+          font: '16px sans-serif', // 字體大小
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE, // 字體樣式
+          fillColor: new Cesium.Color.fromCssColorString("#D8637D"), // 字體填充色
+          outlineWidth: 2,  // 字體外圍線寬度（同樣也有顏色可設置）
+          outlineColor: new Cesium.Color.fromCssColorString("#000000"),
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // 垂直位置
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          pixelOffset: new Cesium.Cartesian2(0, 30),  // 中心位置
+          disableDepthTestDistance: Number.POSITIVE_INFINITY // 被遮擋是否可見（也就是將這個Entity在場景中至頂）
+        },
+        polygon : {
           id: lonlat,
-          name: areaName,
-          position: cartesian3,
-          label: {
-            text: areaName,
-            font: '16px sans-serif', // 字體大小
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE, // 字體樣式
-            fillColor: new Cesium.Color.fromCssColorString("#D8637D"), // 字體填充色
-            outlineWidth: 2,  // 字體外圍線寬度（同樣也有顏色可設置）
-            outlineColor: new Cesium.Color.fromCssColorString("#000000"),
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // 垂直位置
-            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            pixelOffset: new Cesium.Cartesian2(0, 30),  // 中心位置
-            disableDepthTestDistance: Number.POSITIVE_INFINITY // 被遮擋是否可見（也就是將這個Entity在場景中至頂）
-          },
-          polygon : {
-            id: lonlat,
-            hierarchy: Cesium.Cartesian3.fromDegreesArray(floodedAreaPoint),
-            extrudedHeight: height, 
-            material: new Cesium.ColorMaterialProperty(fadeColor),
-            closeTop: true,
-            closeBottom: true,
-            outline: true,
-            outlineColor: new Cesium.ColorMaterialProperty(fadeColor),
-          },
+          hierarchy: Cesium.Cartesian3.fromDegreesArray(floodedAreaPoint),
+          extrudedHeight: height, 
+          material: new Cesium.ColorMaterialProperty(fadeColor),
+          closeTop: true,
+          closeBottom: true,
+          outline: true,
+          outlineColor: new Cesium.ColorMaterialProperty(fadeColor),
+        },
       }
       viewer.entities.add(entity)
       
@@ -611,6 +588,7 @@ export default {
       return height
     },
     getBoundingBox(pLatitude, pLongitude, pDistanceInMeters) {
+      // pDistanceInMeters 公尺
       function getBoundingBoxs(pLatitude, pLongitude, pDistanceInMeters) {
         let latRadian = pLatitude.toRad()
         let degLatKm = 110.574235
@@ -624,20 +602,13 @@ export default {
         let leftLng = pLongitude - deltaLong
         let rightLng = pLongitude + deltaLong
 
-        // let northWestCoords = topLat + ',' + leftLng
-        // let northEastCoords = topLat + ',' + rightLng
-        // let southWestCoords = bottomLat + ',' + leftLng
-        // let southEastCoords = bottomLat + ',' + rightLng
-
-        // let boundingBox = [northWestCoords, northEastCoords, southWestCoords, southEastCoords]
-
         let boundingBox = [leftLng,topLat,leftLng,bottomLat,rightLng,bottomLat,rightLng,topLat]
         return boundingBox
       }
 
       if (typeof(Number.prototype.toRad) === "undefined") {
         Number.prototype.toRad = function() {
-        return this * Math.PI / 180;
+        return this * Math.PI / 180
        }
       }
       return getBoundingBoxs(pLatitude,pLongitude,pDistanceInMeters)

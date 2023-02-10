@@ -56,11 +56,19 @@
                   </v-btn>
                   <p class="mb-0 mx-2 grey lighten-1 white--text px-1 py-1 rounded">{{speedText}}</p>
                 </div>
-                <v-btn class="mx-2" dark small color="info" @click="showMapFloodSimulation"><v-icon left>mdi-water-alert</v-icon>顯示3D淹水模擬</v-btn>
+                <div class="floodAreaBar">
+                  <v-text-field
+                    label="Flood"
+                    :value="pDistanceInMeters"
+                    suffix="m"
+                    v-model="floodAreaMeterValue"
+                    @change="changeFloodAreaFunc(floodAreaMeterValue)"
+                  ></v-text-field>
+                </div>
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="12">
+              <v-col cols="6">
                 <v-chip
                   class="ma-1"
                   color="teal"
@@ -83,6 +91,9 @@
                   </v-icon>
                   {{ sensorDataWaterLevel }} m
                 </v-chip>
+              </v-col>
+              <v-col cols="6" class="d-flex justify-space-around align-center">
+                <v-btn class="mx-2" dark small color="info" @click="showMapFloodSimulation"><v-icon left>mdi-water-alert</v-icon>顯示3D淹水模擬</v-btn>
               </v-col>
             </v-row>
           </v-col>
@@ -127,7 +138,7 @@ import NotFoundDialog from "@/components/dialog/NotFoundDialog.vue"
 export default {
   components:{PopupTable, WaterFloodSiumlationImg,LinearProgressbar,NotFoundDialog,FloodChart},
   mixins: [customApi],
-  props: ["sensorDailogIsOpen", "sensorData","sensorDataLog"],
+  props: ["sensorDailogIsOpen", "sensorData","sensorDataLog","pDistanceInMeters"],
   data: () => ({
     isLoading: false,
     currentPositionInfo: {
@@ -145,7 +156,8 @@ export default {
     floodTimeZone: 0,
     floodTargetValue: 0,
     timerInterval: [],
-    interValValue: 1000
+    interValValue: 1000,
+    floodAreaMeterValue: 100,
   }),
   methods: {
     closeFunc(){
@@ -223,6 +235,9 @@ export default {
         this.playerSpeedNum = 5
       }
       this.playerSpeed = speedList[this.playerSpeedNum]
+    },
+    changeFloodAreaFunc(floodAreaMeter){
+      this.$emit('changeFloodAreaFunc', Number(floodAreaMeter))
     }
   },
   computed:{
@@ -281,9 +296,6 @@ export default {
     }
   },
   watch: {
-    sensorData(){
-      console.log(this.sensorData)
-    },
     sensorDataLog(){
       this.maxTimerNum = this.sensorDataLog.length - 1
     },

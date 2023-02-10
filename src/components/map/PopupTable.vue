@@ -45,9 +45,7 @@
       },
     },
     watch: {
-      items(){
-        console.log(this.items)
-      }
+      
     }
   }
 </script>
