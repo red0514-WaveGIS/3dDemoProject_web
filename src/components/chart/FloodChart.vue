@@ -3,12 +3,15 @@
 </template>
 
 <script>
+var xIndex = 0
+console.log(xIndex)
 export default {
   name: "FloodChart",
-  props: ["items"],
+  props: ["items","playerSpeed","timerNum"],
   data: () => ({
     crumbleProbability: null,
     tempChat: null,
+    aaa: '',
     option: {
       title: {
         text: '歷史水位圖'
@@ -17,9 +20,15 @@ export default {
         trigger: 'axis',
         axisPointer: {
           type: 'cross',
+          label: {
+            backgroundColor: '#283b56'
+          },
           crossStyle: {
             color: '#999'
           }
+        },
+        formatter: function(params) {
+          xIndex = params[0].dataIndex
         }
       },
       xAxis: {
@@ -27,26 +36,32 @@ export default {
         boundaryGap: false,
         nameLocation: 'middle',
         axisPointer: {
-          type: 'shadow'
+          type: 'shadow',
         },
         data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] // date
       },
       yAxis: {
-        type: 'value'
+        type: 'value',
       },
       series: [
         {
           data: [820, 932, 901, 934, 1290, 1330, 1320], // init water level
           type: 'line',
+          smooth: 0.4,
           areaStyle: {
-            color: "#D9EDF7"
+            color: "#D9EDF770"
           },
           // lineStyle:{
           //   color: "#0000050"
           // },
           itemStyle:{
-            color: "#092D3D80"
-          }
+            color: function(s){
+            let itemIndex = s.dataIndex
+            let color = "#092D3D80"
+            if(xIndex === itemIndex) color = "#E62B32"
+              return color
+            }
+          },
         }
       ],
       grid: {
@@ -54,6 +69,7 @@ export default {
         bottom: 20, // default is 60
       }
     },
+    chartsInterval: null
   }),
   mounted: async function() {
     this.option.xAxis.data = this.items.dateList
@@ -63,9 +79,15 @@ export default {
   methods: {
     buildChartFun: function(){
       let myChart = this.$echarts.buildChart("barChart", {})
-
-      myChart.setOption(this.option);
+      myChart.setOption(this.option)
       this.tempChat = myChart
+      // let currentThis = this
+      // this.tempChat.getZr().on('click', function(){
+      //   console.log(xIndex)
+      //   console.log(currentThis.tempChat)
+      // })
+      this.tempChat.setOption(this.option)
+
     },
     resize: function() {
       if (this.tempChat) {
@@ -98,6 +120,10 @@ export default {
       this.option.xAxis.data = this.items.dateList
       this.option.series[0].data = this.items.waterLevelList
       this.buildChartFun()
+    },
+    "timerNum": function(){
+      xIndex = this.timerNum
+      this.tempChat.setOption(this.option)
     }
   }
 }

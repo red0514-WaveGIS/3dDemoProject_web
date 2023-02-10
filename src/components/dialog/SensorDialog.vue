@@ -3,7 +3,7 @@
     v-model="sensorDailogIsOpen"
     persistent
     :hide-overlay="true"
-    max-width="600"
+    max-width="700"
     no-click-animation
     scrollable
     class="v-bottom-sheet"
@@ -19,6 +19,8 @@
           <v-col cols="12">
             <FloodChart
               :items="chartData"
+              :playerSpeed="playerSpeed"
+              :timerNum="timerNum"
             />
             <v-slider
               class="mt-12"
@@ -290,7 +292,6 @@ export default {
     },
     playerSpeed(newVal){
       this.interValValue = newVal
-      console.log(this.interValValue)
     }
   }
 }
