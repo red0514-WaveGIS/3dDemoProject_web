@@ -477,6 +477,7 @@ export default {
       let cartesian3 = Cesium.Cartesian3.fromDegrees(lon, lat)
       let height = 0
       height = await this.getTerrainHeigh(cartesian3, height)
+      item.height = height
       const billboard = {
         id: st_no, // id
         position: cartesian3, // 位置

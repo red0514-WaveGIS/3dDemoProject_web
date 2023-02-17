@@ -58,6 +58,7 @@
                 </div>
                 <div class="floodAreaBar">
                   <v-text-field
+                    readonly
                     label="Flood"
                     :value="pDistanceInMeters"
                     suffix="m"
@@ -92,9 +93,9 @@
                   {{ sensorDataWaterLevel }} m
                 </v-chip>
               </v-col>
-              <v-col cols="6" class="d-flex justify-space-around align-center">
+              <!-- <v-col cols="6" class="d-flex justify-space-around align-center">
                 <v-btn class="mx-2" dark small color="info" @click="showMapFloodSimulation"><v-icon left>mdi-water-alert</v-icon>顯示3D淹水模擬</v-btn>
-              </v-col>
+              </v-col> -->
             </v-row>
           </v-col>
         </v-row>

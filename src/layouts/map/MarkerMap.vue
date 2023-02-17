@@ -331,6 +331,7 @@ export default {
                   currentThis.sensorData = entity.store
                   currentThis.sensorGeoData = data
                   currentThis.sensorDailogIsOpen = true
+                  currentThis.floodedSimulationFunc()
                 })
               }
             }
@@ -399,17 +400,21 @@ export default {
       return geoDetail
     },
     floodedSimulationFunc(){
-      let geoData = this.sensorGeoData
-      let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
-      let ray = this.cesiumViewer.camera.getPickRay(geoData.position)
-      let cartesian3 = this.cesiumViewer.scene.globe.pick(ray, this.cesiumViewer.scene)
-      let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
-      let lon = this.Cesium.Math.toDegrees(cartographic.longitude)
-      let lat = this.Cesium.Math.toDegrees(cartographic.latitude)
+      console.log(this.sensorData)
+      // let geoData = this.sensorGeoData
+      // let ellipsoid = this.cesiumViewer.scene.globe.ellipsoid
+      // let ray = this.cesiumViewer.camera.getPickRay(geoData.position)
+      // let cartesian3 = this.cesiumViewer.scene.globe.pick(ray, this.cesiumViewer.scene)
+      // let cartographic = ellipsoid.cartesianToCartographic(cartesian3)
+      // let lon = this.Cesium.Math.toDegrees(cartographic.longitude)
+      // let lat = this.Cesium.Math.toDegrees(cartographic.latitude)
+      let lon = this.sensorData.lon
+      let lat = this.sensorData.lat
+      let height = Number(this.sensorData.height)
       let geoDetail = {
         lon: lon,
         lat: lat,
-        height: cartographic.height,
+        height: height,
         sensorLog: this.sensorDataLog
       }
       // 獲取中心點向外擴4點
