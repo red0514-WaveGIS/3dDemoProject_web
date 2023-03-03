@@ -156,6 +156,7 @@
         </div>
       </div>
       <LonLatHeigntLable
+        v-if="lonLatHeightIsShow"
         :lonLatHeightData="lonLatHeightData"
       />
       <BasicProgressbarVue 
@@ -187,7 +188,6 @@
 <script>
 import customApi from "@/mixins/custom-api.js"
 import customCesium from "@/mixins/custom-cesium.js"
-import wgProj4 from "@/mixins/wg-proj4.js"
 import weather from '@/assets/cesium-object/weather.js'
 import floodedLists from '@/assets/cesium-object/floodedList.js'
 import BasicProgressbarVue from "@/components/progressbar/BasicProgressbar.vue"
@@ -201,7 +201,7 @@ export default {
   components: {
     BasicProgressbarVue,ImgDialog,NotFoundDialog,SensorDialog,LonLatHeigntLable
   },
-  mixins: [customApi, wgProj4, customCesium],
+  mixins: [customApi, customCesium],
   data: () => ({
     orgId: 69,
     Cesium: null,
@@ -258,7 +258,8 @@ export default {
       lon: 0,
       lat: 0,
       height: 0,
-    }
+    },
+    lonLatHeightIsShow: false
   }),
   beforeMount() {
     this.floodedList = floodedLists
@@ -277,16 +278,16 @@ export default {
     .catch(err=>{
       console.log(err)
     })
-    // 加入ION導航
-    // this.addIonEntity(viewer)
+    .finally(()=>{
+      this.lonLatHeightIsShow = true
+    })
 
     // 設定獲取當前點位經緯度(lon, lat)與視野(Camera)高度 ; 初始化Cesium事件
     this.setCesiumEvent()
+    
 
     // 設定拖曳KML匯入地圖
     this.setDragDropFunc(this.cesiumViewer)
-    // 設定隨時Render畫面
-    // this.setInfoPostRender()
 
     this.doRoadingFunc(4000)
   },
@@ -352,15 +353,6 @@ export default {
             currentThis.lonLatHeightData.lat = lonlatInfo.lat
             currentThis.lonLatHeightData.height = lonlatInfo.height
           }, currentThis.Cesium.ScreenSpaceEventType.MOUSE_MOVE) // scroll MOUSE_MOVE 
-        }
-      })
-    },
-    setInfoPostRender(){
-      this.setPostRender(this.cesiumViewer, {
-        hasFeature: async function(handler) {
-          handler.addEventListener(() => {
-            console.log('do postRender!')
-          })
         }
       })
     },

@@ -36,8 +36,8 @@ export default {
   methods: {
     async initOriginCesium () {
       // Browser 相關 initialize 設定
-      document.oncontextmenu = new Function("return false")
-      window.CESIUM_BASE_URL = './'
+      document.oncontextmenu = new Function("return false") // 防止右鍵
+      window.CESIUM_BASE_URL = './' // 需要在node_modules中找到Cesium把Build下的Cesium文件copy到指定public目錄下方
       window['Cesium'] = Cesium
       
       // Cesium 相關設定
@@ -88,44 +88,6 @@ export default {
       // Set initial position
       this.cameraFlyTo(viewer, this.originalPosition)
     },
-    async addIonEntity(viewer){
-      const positionProperty = new Cesium.SampledPositionProperty()
-      const timeSpan = 30
-      const totalSeconds = timeSpan * (this.importKmlList[2].positions.length - 1)
-      const start = Cesium.JulianDate.fromIso8601("2022-12-04T06:30:00Z")
-      const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate())
-
-      viewer.clock.startTime = start.clone()
-      viewer.clock.stopTime = stop.clone()
-      viewer.clock.currentTime = start.clone()
-      viewer.timeline.zoomTo(start, stop)
-      viewer.clock.multiplier = 600 // 1秒 = 1 ; 1分 = 60 ; 10分 = 600
-      viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP
-
-      this.importKmlList[2].positions.forEach((position,index)=>{
-        const time = Cesium.JulianDate.addSeconds(start, index * timeSpan, new Cesium.JulianDate())
-        positionProperty.addSample(time, position)
-      })
-
-      const airplaneUri = '../ionModule/CesiumMilkTruck.glb'
-      const airplaneEntity = {
-        availability: new Cesium.TimeIntervalCollection([
-          new Cesium.TimeInterval({ 
-            start: start, 
-            stop: stop 
-          })
-        ]),
-        position: positionProperty,
-        model: { 
-          uri: airplaneUri,
-        },
-        orientation: new Cesium.VelocityOrientationProperty(positionProperty),
-        path: new Cesium.PathGraphics({ width: 5 }),
-      }
-      viewer.entities.add(airplaneEntity)
-
-      // viewer.trackedEntity = airplaneEntity
-    },
     setDragDropFunc(viewer){
       viewer.extend(Cesium.viewerDragDropMixin, {
         clearOnDrop: true,
@@ -168,10 +130,6 @@ export default {
     },
     setFeatureEventListener(viewer, doFunc){
       let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
-      doFunc.hasFeature(handler)
-    },
-    setPostRender(viewer, doFunc){
-      let handler = viewer.scene.postRender
       doFunc.hasFeature(handler)
     },
     addBuilding(viewer){
@@ -298,11 +256,6 @@ export default {
       let currentThis = this
       let height = new Cesium.CallbackProperty(function (time) {
         if(time){
-          // let jsDate = new Date(time)
-          // let currentTime = dateFormat(
-          //   jsDate,
-          //   "yyyy-MM-dd HH:mm:ss"
-          // )
           if(currentThis.sensorLogQueue[currentThis.selectedFloodDate]) {
             value = currentThis.sensorLogQueue[currentThis.selectedFloodDate]
           }
@@ -438,14 +391,14 @@ export default {
       layers.remove(baseLayer)
       layers.addImageryProvider(this.cesiumBaseSources[layerName])
     },
-    cameraFlyTo(scene, position, headings, pitchs, rolls){
+    cameraFlyTo(viewer, position, headings, pitchs, rolls){
       let heading = headings === null || headings === undefined ? 0 : headings
       let pitch = pitchs === null || pitchs === undefined ? -45 : pitchs
       let roll = rolls === null || rolls === undefined ? 0 : rolls
 
-      scene.camera.flyTo({
-          destination : Cesium.Cartesian3.fromDegrees(position.lon, position.lat, position.height),
-          orientation : {
+      viewer.camera.flyTo({
+        destination : Cesium.Cartesian3.fromDegrees(position.lon, position.lat, position.height),
+        orientation : {
           heading : Cesium.Math.toRadians(heading), // up down
           pitch : Cesium.Math.toRadians(pitch), // left right
           roll: Cesium.Math.toRadians(roll), // left right
