@@ -43,7 +43,7 @@ export default {
       // Cesium 相關設定
       Cesium.Ion.defaultAccessToken = this.token // 帶入token
       
-      //加入地形
+      // 加入Cesium預設地形
       // let terrainModels = Cesium.createWorldTerrain({
       //   requestVertexNormals : true
       // })
@@ -101,31 +101,6 @@ export default {
             viewer.dataSources.remove(viewer.dataSources.get(i));
           }
         }
-      })
-    },
-    async addKmlFileFunc(viewer,path,name){
-      let options = {
-        camera: viewer.scene.camera,
-        canvas: viewer.scene.canvas,
-        clampToGround: true, //開啟貼地
-      }
-      let index = null
-      this.importKmlList.forEach((el,i)=>{
-        if(el.name === name) {
-          index = i
-        }
-      })
-      await Cesium.KmlDataSource.load(path,options)
-      .then(kmlData=>{
-        let values = kmlData.entities.values
-        for (let i = 0; i < values.length; i++) {
-          if(Cesium.defined(values[i].polyline)) {
-            values[i].polyline.clampToGround = true
-            values[i].polyline.arcType = Cesium.ArcType.GEODESIC;
-            this.importKmlList[index].positions = values[i].polyline.positions.getValue()
-          }
-        }
-        viewer.dataSources.add(kmlData)
       })
     },
     setFeatureEventListener(viewer, doFunc){
